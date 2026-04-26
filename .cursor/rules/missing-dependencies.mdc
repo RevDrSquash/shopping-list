@@ -1,0 +1,30 @@
+---
+description: Stop and ask before working around missing local dependencies
+alwaysApply: true
+---
+
+# Missing Local Dependencies
+
+This project may be used on a fresh laptop where tools or services are not installed yet.
+
+If a required command, runtime, package manager, service, or other dependency is missing or unavailable, stop the affected work and ask the user how to proceed before choosing a workaround.
+
+Examples include:
+
+- `docker`, Docker Desktop, or a required container service not running.
+- `npm`, `node`, `poetry`, `python`, database clients, or other expected developer tools not installed.
+- Project dependencies not installed when the next step requires them.
+
+When this happens:
+
+- Report the exact dependency or command that is unavailable.
+- Explain which step is blocked and why the dependency is needed.
+- Ask whether the user wants to install or start it, provide an alternative approach, or skip that step.
+
+Do not silently:
+
+- Rewrite code or configuration to avoid the missing dependency.
+- Switch to a different package manager, runtime, database, or service.
+- Mock, vendor, stub, or bypass the dependency.
+- Skip tests or verification that the task normally requires.
+
