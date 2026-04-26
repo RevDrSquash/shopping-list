@@ -50,8 +50,22 @@ Useful endpoints:
 - `GET /health`
 - `GET /dev/login?email=person@example.com`
 - `GET /me`
+- `GET /staples`
+- `POST /staples`
+- `PATCH /staples/{staple_id}`
+- `DELETE /staples/{staple_id}`
 
 `/dev/login` only works when `ENV` is `development` or `test`.
+
+## Staple Promotion
+
+Run the short-lived promotion job locally:
+
+```sh
+poetry run python -m app.jobs.promote_staples
+```
+
+The command promotes due staples into `shopping_list_items`, prints a small summary, closes database connections, and exits. Railway can run the same command later as a cron service.
 
 ## Tests
 

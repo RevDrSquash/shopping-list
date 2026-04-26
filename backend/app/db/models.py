@@ -5,7 +5,7 @@ from enum import Enum
 from typing import List, Optional
 from uuid import UUID, uuid4
 
-from sqlalchemy import DateTime, ForeignKey, Index, String, UniqueConstraint, func, text
+from sqlalchemy import DateTime, ForeignKey, Index, Integer, String, UniqueConstraint, func, text
 from sqlalchemy.dialects.postgresql import UUID as PostgresUUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from sqlalchemy import Enum as SqlEnum
@@ -18,6 +18,12 @@ class Base(DeclarativeBase):
 class MembershipStatus(str, Enum):
     pending = "pending"
     member = "member"
+
+
+class ShoppingListItemStatus(str, Enum):
+    needs_review = "needs_review"
+    confirmed = "confirmed"
+    purchased = "purchased"
 
 
 class TimestampMixin:
@@ -70,6 +76,14 @@ class Household(TimestampMixin, Base):
         back_populates="household",
         cascade="all, delete-orphan",
     )
+    staples: Mapped[List["Staple"]] = relationship(
+        back_populates="household",
+        cascade="all, delete-orphan",
+    )
+    shopping_list_items: Mapped[List["ShoppingListItem"]] = relationship(
+        back_populates="household",
+        cascade="all, delete-orphan",
+    )
 
 
 class Membership(TimestampMixin, Base):
@@ -107,3 +121,59 @@ class Membership(TimestampMixin, Base):
 
     user: Mapped[User] = relationship(back_populates="memberships")
     household: Mapped[Household] = relationship(back_populates="memberships")
+
+
+class Staple(TimestampMixin, Base):
+    __tablename__ = "staples"
+
+    id: Mapped[UUID] = mapped_column(
+        PostgresUUID(as_uuid=True),
+        primary_key=True,
+        default=uuid4,
+    )
+    household_id: Mapped[UUID] = mapped_column(
+        ForeignKey("households.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    quantity: Mapped[str] = mapped_column(String(255), nullable=False, default="")
+    interval_days: Mapped[int] = mapped_column(Integer, nullable=False)
+    last_purchased_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    next_add_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, index=True)
+
+    household: Mapped[Household] = relationship(back_populates="staples")
+    shopping_list_items: Mapped[List["ShoppingListItem"]] = relationship(
+        back_populates="staple",
+        passive_deletes=True,
+    )
+
+
+class ShoppingListItem(TimestampMixin, Base):
+    __tablename__ = "shopping_list_items"
+
+    id: Mapped[UUID] = mapped_column(
+        PostgresUUID(as_uuid=True),
+        primary_key=True,
+        default=uuid4,
+    )
+    household_id: Mapped[UUID] = mapped_column(
+        ForeignKey("households.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    staple_id: Mapped[Optional[UUID]] = mapped_column(
+        ForeignKey("staples.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    quantity: Mapped[str] = mapped_column(String(255), nullable=False, default="")
+    status: Mapped[ShoppingListItemStatus] = mapped_column(
+        SqlEnum(ShoppingListItemStatus, name="shopping_list_item_status"),
+        nullable=False,
+        default=ShoppingListItemStatus.needs_review,
+    )
+
+    household: Mapped[Household] = relationship(back_populates="shopping_list_items")
+    staple: Mapped[Optional[Staple]] = relationship(back_populates="shopping_list_items")

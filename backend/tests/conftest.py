@@ -21,7 +21,7 @@ os.environ.setdefault(
 os.environ.setdefault("SESSION_SECRET", "test-session-secret")
 
 from app.core.config import get_settings  # noqa: E402
-from app.db.models import Household, Membership, User  # noqa: E402
+from app.db.models import Household, Membership, ShoppingListItem, Staple, User  # noqa: E402
 from app.db.session import get_sessionmaker, reset_database_caches  # noqa: E402
 from app.main import create_app  # noqa: E402
 
@@ -59,6 +59,8 @@ def clean_tables(migrated_db: None) -> Generator[None, None, None]:
 
     with get_sessionmaker()() as session:
         with session.begin():
+            session.execute(delete(ShoppingListItem))
+            session.execute(delete(Staple))
             session.execute(delete(Membership))
             session.execute(delete(Household))
             session.execute(delete(User))
