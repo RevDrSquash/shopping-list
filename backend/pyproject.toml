@@ -1,0 +1,29 @@
+[tool.poetry]
+name = "shopping-list-backend"
+version = "0.1.0"
+description = "FastAPI backend for the household shopping list app"
+authors = ["Tristan"]
+readme = "README.md"
+packages = [{ include = "app" }]
+
+[tool.poetry.dependencies]
+python = ">=3.9,<4.0"
+fastapi = "*"
+uvicorn = { extras = ["standard"], version = "*" }
+sqlalchemy = "*"
+alembic = "*"
+psycopg = { extras = ["binary"], version = "*" }
+pydantic-settings = "*"
+itsdangerous = "*"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "*"
+httpx = "*"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
