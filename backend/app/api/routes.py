@@ -12,6 +12,7 @@ from app.core.config import Settings, get_settings
 from app.db.models import Household, Membership, MembershipStatus, ShoppingListItem, ShoppingListItemStatus, Staple, User
 from app.db.session import get_db
 from app.services.auth import normalize_email, provision_user_for_email
+from app.services.promotion import promote_all_inactive_staples
 from app.services.shopping_list import add_one_off_item, confirm_item, list_active_items, resolve_item
 from app.services.staples import create_staple, get_staple, list_staples
 
@@ -72,6 +73,10 @@ class StapleResponse(BaseModel):
     eligible_at: datetime
     created_at: datetime
     updated_at: datetime
+
+
+class PromotionResponse(BaseModel):
+    promoted_count: int
 
 
 class ShoppingListItemCreate(BaseModel):
@@ -255,6 +260,16 @@ def post_staple(
     db.commit()
     db.refresh(staple)
     return staple
+
+
+@router.post("/staples/promote-all", response_model=PromotionResponse)
+def post_promote_all_staples(
+    household: Household = Depends(get_current_household),
+    db: Session = Depends(get_db),
+) -> PromotionResponse:
+    promoted_count = promote_all_inactive_staples(db, household.id)
+    db.commit()
+    return PromotionResponse(promoted_count=promoted_count)
 
 
 @router.patch("/staples/{staple_id}", response_model=StapleResponse)

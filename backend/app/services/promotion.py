@@ -1,5 +1,6 @@
 from datetime import datetime, timezone
 from typing import Optional
+from uuid import UUID
 
 from sqlalchemy import exists, select
 from sqlalchemy.orm import Session
@@ -15,14 +16,25 @@ ACTIVE_PROMOTION_STATUSES = (
 
 def promote_due_staples(db: Session, now: Optional[datetime] = None) -> int:
     promotion_time = now or datetime.now(timezone.utc)
-    promoted_count = 0
-    due_staples = db.scalars(
-        select(Staple)
-        .order_by(Staple.created_at)
-    )
+    return _promote_staples(db, promotion_time=promotion_time)
 
-    for staple in due_staples:
-        if staple.eligible_at > promotion_time:
+
+def promote_all_inactive_staples(db: Session, household_id: UUID) -> int:
+    return _promote_staples(db, household_id=household_id)
+
+
+def _promote_staples(
+    db: Session,
+    promotion_time: Optional[datetime] = None,
+    household_id: Optional[UUID] = None,
+) -> int:
+    promoted_count = 0
+    query = select(Staple).order_by(Staple.created_at)
+    if household_id is not None:
+        query = query.where(Staple.household_id == household_id)
+
+    for staple in db.scalars(query):
+        if promotion_time is not None and staple.eligible_at > promotion_time:
             continue
 
         active_item_exists = db.scalar(

@@ -4,28 +4,40 @@ import { useCallback, useEffect, useState } from "react";
 import { AddOneOffItem } from "@/components/AddOneOffItem";
 import { DevLogin } from "@/components/DevLogin";
 import { ShoppingList } from "@/components/ShoppingList";
+import { StaplesManager } from "@/components/StaplesManager";
 import {
   addOneOffItem,
   confirmItem,
+  createStaple,
+  deleteStaple,
   devLogin,
   getCurrentUser,
   getShoppingList,
+  getStaples,
+  promoteAllStaples,
   purchaseItem,
   skipItem,
+  updateStaple,
   type CurrentUser,
+  type Staple,
+  type StaplePayload,
   type ShoppingListItem,
 } from "@/lib/api";
 
 export default function Home() {
   const [user, setUser] = useState<CurrentUser | null>(null);
   const [items, setItems] = useState<ShoppingListItem[]>([]);
+  const [staples, setStaples] = useState<Staple[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isPromoting, setIsPromoting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pendingItemId, setPendingItemId] = useState<string | null>(null);
+  const [pendingStapleId, setPendingStapleId] = useState<string | null>(null);
 
-  const loadShoppingList = useCallback(async () => {
-    const shoppingList = await getShoppingList();
+  const loadAppData = useCallback(async () => {
+    const [shoppingList, householdStaples] = await Promise.all([getShoppingList(), getStaples()]);
     setItems(shoppingList);
+    setStaples(householdStaples);
   }, []);
 
   const loadSession = useCallback(async () => {
@@ -35,16 +47,17 @@ export default function Home() {
       const currentUser = await getCurrentUser();
       setUser(currentUser);
       if (currentUser) {
-        await loadShoppingList();
+        await loadAppData();
       } else {
         setItems([]);
+        setStaples([]);
       }
     } catch (sessionError) {
       setError(sessionError instanceof Error ? sessionError.message : "Unable to load session");
     } finally {
       setIsLoading(false);
     }
-  }, [loadShoppingList]);
+  }, [loadAppData]);
 
   useEffect(() => {
     void loadSession();
@@ -59,7 +72,7 @@ export default function Home() {
     setError(null);
     try {
       await mutation();
-      await loadShoppingList();
+      await loadAppData();
     } catch (mutationError) {
       setError(mutationError instanceof Error ? mutationError.message : "Unable to update shopping list");
     }
@@ -71,6 +84,29 @@ export default function Home() {
       await refreshAfterMutation(() => mutation(itemId));
     } finally {
       setPendingItemId(null);
+    }
+  }
+
+  async function handleStapleAction(stapleId: string, mutation: (id: string) => Promise<unknown>) {
+    setPendingStapleId(stapleId);
+    try {
+      await refreshAfterMutation(() => mutation(stapleId));
+    } finally {
+      setPendingStapleId(null);
+    }
+  }
+
+  async function handlePromoteAll() {
+    setIsPromoting(true);
+    try {
+      const result = await promoteAllStaples();
+      await loadAppData();
+      return result;
+    } catch (promotionError) {
+      setError(promotionError instanceof Error ? promotionError.message : "Unable to promote staples");
+      return null;
+    } finally {
+      setIsPromoting(false);
     }
   }
 
@@ -107,6 +143,16 @@ export default function Home() {
       </header>
 
       {error ? <p className="error banner">{error}</p> : null}
+
+      <StaplesManager
+        staples={staples}
+        pendingStapleId={pendingStapleId}
+        isPromoting={isPromoting}
+        onCreate={(payload: StaplePayload) => refreshAfterMutation(() => createStaple(payload))}
+        onUpdate={(stapleId, payload) => handleStapleAction(stapleId, (id) => updateStaple(id, payload))}
+        onDelete={(stapleId) => handleStapleAction(stapleId, deleteStaple)}
+        onPromoteAll={handlePromoteAll}
+      />
 
       <AddOneOffItem onAdd={(payload) => refreshAfterMutation(() => addOneOffItem(payload))} />
       <ShoppingList
