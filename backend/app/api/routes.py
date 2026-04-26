@@ -9,9 +9,10 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_household, get_current_user
 from app.core.config import Settings, get_settings
-from app.db.models import Household, Membership, MembershipStatus, Staple, User
+from app.db.models import Household, Membership, MembershipStatus, ShoppingListItem, ShoppingListItemStatus, Staple, User
 from app.db.session import get_db
 from app.services.auth import normalize_email, provision_user_for_email
+from app.services.shopping_list import add_one_off_item, confirm_item, list_active_items, resolve_item
 from app.services.staples import create_staple, get_staple, list_staples
 
 router = APIRouter()
@@ -69,6 +70,37 @@ class StapleResponse(BaseModel):
     interval_days: int
     last_resolved_at: Optional[datetime]
     eligible_at: datetime
+    created_at: datetime
+    updated_at: datetime
+
+
+class ShoppingListItemCreate(BaseModel):
+    name: str = Field(min_length=1, max_length=255)
+    quantity: str = Field(default="", max_length=255)
+
+    @field_validator("name")
+    @classmethod
+    def name_must_not_be_blank(cls, value: str) -> str:
+        stripped = value.strip()
+        if not stripped:
+            raise ValueError("Name is required")
+        return stripped
+
+    @field_validator("quantity")
+    @classmethod
+    def quantity_is_free_text(cls, value: str) -> str:
+        return value.strip()
+
+
+class ShoppingListItemResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    household_id: UUID
+    staple_id: Optional[UUID]
+    name: str
+    quantity: str
+    status: ShoppingListItemStatus
     created_at: datetime
     updated_at: datetime
 
@@ -135,6 +167,76 @@ def get_staples(
     db: Session = Depends(get_db),
 ) -> list[Staple]:
     return list_staples(db, household.id)
+
+
+@router.get("/shopping-list", response_model=list[ShoppingListItemResponse])
+def get_shopping_list(
+    household: Household = Depends(get_current_household),
+    db: Session = Depends(get_db),
+) -> list[ShoppingListItem]:
+    return list_active_items(db, household.id)
+
+
+@router.post(
+    "/shopping-list/items",
+    response_model=ShoppingListItemResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+def post_shopping_list_item(
+    payload: ShoppingListItemCreate,
+    household: Household = Depends(get_current_household),
+    db: Session = Depends(get_db),
+) -> ShoppingListItem:
+    item = add_one_off_item(
+        db=db,
+        household_id=household.id,
+        name=payload.name,
+        quantity=payload.quantity,
+    )
+    db.commit()
+    db.refresh(item)
+    return item
+
+
+@router.post("/shopping-list/items/{item_id}/confirm", response_model=ShoppingListItemResponse)
+def post_confirm_shopping_list_item(
+    item_id: UUID,
+    household: Household = Depends(get_current_household),
+    db: Session = Depends(get_db),
+) -> ShoppingListItem:
+    item = confirm_item(db, household.id, item_id)
+    if item is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Shopping list item not found")
+
+    db.commit()
+    db.refresh(item)
+    return item
+
+
+@router.post("/shopping-list/items/{item_id}/skip", status_code=status.HTTP_204_NO_CONTENT)
+def post_skip_shopping_list_item(
+    item_id: UUID,
+    household: Household = Depends(get_current_household),
+    db: Session = Depends(get_db),
+) -> Response:
+    if not resolve_item(db, household.id, item_id):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Shopping list item not found")
+
+    db.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.post("/shopping-list/items/{item_id}/purchase", status_code=status.HTTP_204_NO_CONTENT)
+def post_purchase_shopping_list_item(
+    item_id: UUID,
+    household: Household = Depends(get_current_household),
+    db: Session = Depends(get_db),
+) -> Response:
+    if not resolve_item(db, household.id, item_id):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Shopping list item not found")
+
+    db.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @router.post("/staples", response_model=StapleResponse, status_code=status.HTTP_201_CREATED)
