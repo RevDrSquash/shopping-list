@@ -37,13 +37,13 @@ Two core lists per household:
 - **users** — email, Google OAuth id
 - **households** — the shared unit that owns both lists
 - **memberships** — joins users to households; status is `pending` (invited) or `member`
-- **staples** — belong to a household; store name, quantity (free text), interval in days, and when to next add to the shopping list
+- **staples** — belong to a household; store name, quantity (free text), interval in days, and when the staple was last resolved
 - **shopping_list_items** — belong to a household; optional `staple_id` (null for one-offs); status is `needs_review`, `confirmed`, or `purchased`
 
 ## Key Behaviours
 
 - Staples are copied (not referenced) onto the shopping list when promoted. Edits to a staple don't affect the current cycle's item.
-- Staple re-add timing: `last_purchased_at + (interval * 2/3)`. Same rule applies whether the item was purchased or skipped.
+- Staple re-add timing is derived from `(last_resolved_at or created_at) + (interval * 2/3)`. Resolving means either purchasing the item or skipping it for the cycle.
 - SSE connection is opened per household on page load. All writes broadcast an event so both household members see updates without refreshing.
 - Quantity is a free-text field (e.g. "2L", "1 pack"). No units enum for now.
 

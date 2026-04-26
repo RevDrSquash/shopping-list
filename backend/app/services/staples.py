@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from app.db.models import Staple
 
 
-def calculate_next_add_at(
+def calculate_eligible_at(
     interval_days: int,
     base_time: Optional[datetime] = None,
 ) -> datetime:
@@ -51,7 +51,6 @@ def create_staple(
         interval_days=interval_days,
         created_at=created_at,
         updated_at=created_at,
-        next_add_at=calculate_next_add_at(interval_days, created_at),
     )
     db.add(staple)
     db.flush()

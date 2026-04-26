@@ -34,15 +34,13 @@ def upgrade() -> None:
         sa.Column("name", sa.String(length=255), nullable=False),
         sa.Column("quantity", sa.String(length=255), nullable=False),
         sa.Column("interval_days", sa.Integer(), nullable=False),
-        sa.Column("last_purchased_at", sa.DateTime(timezone=True), nullable=True),
-        sa.Column("next_add_at", sa.DateTime(timezone=True), nullable=False),
+        sa.Column("last_resolved_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
         sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
         sa.ForeignKeyConstraint(["household_id"], ["households.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_index(op.f("ix_staples_household_id"), "staples", ["household_id"], unique=False)
-    op.create_index(op.f("ix_staples_next_add_at"), "staples", ["next_add_at"], unique=False)
 
     op.create_table(
         "shopping_list_items",
@@ -76,7 +74,6 @@ def downgrade() -> None:
     op.drop_index(op.f("ix_shopping_list_items_staple_id"), table_name="shopping_list_items")
     op.drop_index(op.f("ix_shopping_list_items_household_id"), table_name="shopping_list_items")
     op.drop_table("shopping_list_items")
-    op.drop_index(op.f("ix_staples_next_add_at"), table_name="staples")
     op.drop_index(op.f("ix_staples_household_id"), table_name="staples")
     op.drop_table("staples")
 

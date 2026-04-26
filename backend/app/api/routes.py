@@ -12,7 +12,7 @@ from app.core.config import Settings, get_settings
 from app.db.models import Household, Membership, MembershipStatus, Staple, User
 from app.db.session import get_db
 from app.services.auth import normalize_email, provision_user_for_email
-from app.services.staples import calculate_next_add_at, create_staple, get_staple, list_staples
+from app.services.staples import create_staple, get_staple, list_staples
 
 router = APIRouter()
 
@@ -67,8 +67,8 @@ class StapleResponse(BaseModel):
     name: str
     quantity: str
     interval_days: int
-    last_purchased_at: Optional[datetime]
-    next_add_at: datetime
+    last_resolved_at: Optional[datetime]
+    eligible_at: datetime
     created_at: datetime
     updated_at: datetime
 
@@ -173,10 +173,6 @@ def patch_staple(
         staple.quantity = updates["quantity"]
     if "interval_days" in updates:
         staple.interval_days = updates["interval_days"]
-        staple.next_add_at = calculate_next_add_at(
-            staple.interval_days,
-            staple.last_purchased_at or staple.created_at,
-        )
 
     db.commit()
     db.refresh(staple)

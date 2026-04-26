@@ -70,7 +70,7 @@ Households that shop on a recurring schedule have no lightweight, shared tool th
 
 **Automatic staple promotion**
 - A cron job runs periodically and adds eligible staples to the household's shopping list.
-- Promotion trigger: `last_purchased_at + (interval × 2/3)` has passed.
+- Promotion trigger: `(last_resolved_at or created_at) + (interval × 2/3)` has passed.
 - The same rule applies whether the item was purchased or skipped last cycle.
 - Staples are copied (not referenced) onto the shopping list; subsequent edits to the staple do not affect the current cycle's item.
 - Acceptance criteria:
@@ -85,12 +85,12 @@ Households that shop on a recurring schedule have no lightweight, shared tool th
 - Acceptance criteria:
   - [ ] `needs_review` items are visually distinguished from `confirmed` items
   - [ ] Removing an item for this cycle does not delete the underlying staple
-  - [ ] Removing a staple-linked item resets the staple's `next_add_at` to `now + (interval × 2/3)`, the same rule as a purchase
+  - [ ] Removing a staple-linked item sets the staple's `last_resolved_at` to `now`, the same rule as a purchase
   - [ ] One-off items have no interval or staple association
 
 **Shopping (check-off)**
 - Members can mark an item as purchased.
-- On purchase, the staple's `next_add_at` resets based on the interval.
+- On purchase, the staple's `last_resolved_at` is set to `now`; the next promotion time is derived from the interval.
 - Purchased items are cleared from the active list.
 - Acceptance criteria:
   - [ ] Checking off a staple-linked item resets the staple timer

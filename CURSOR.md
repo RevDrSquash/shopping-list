@@ -29,7 +29,7 @@ This is a personal learning project for a simple household shopping list app. Ke
 - A user belongs to one household for v1.
 - `quantity` is free text; do not introduce unit enums.
 - Auto-promoted staples create independent shopping list item copies. Editing or deleting a staple must not mutate current-cycle list items.
-- Promotion timing is based on `last_purchased_at + interval * 2/3`; skipped and purchased staple-linked items both reset the timer.
+- Promotion timing is derived from `(last_resolved_at or created_at) + interval * 2/3`; skipped and purchased staple-linked items both set `last_resolved_at`.
 - One-off shopping list items are confirmed immediately and have no staple side effects.
 - All writes should broadcast an SSE event so other household members update without refresh.
 - Invite acceptance appends both lists into the inviting household with no deduplication.

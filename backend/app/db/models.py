@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from enum import Enum
 from typing import List, Optional
 from uuid import UUID, uuid4
@@ -139,14 +139,18 @@ class Staple(TimestampMixin, Base):
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     quantity: Mapped[str] = mapped_column(String(255), nullable=False, default="")
     interval_days: Mapped[int] = mapped_column(Integer, nullable=False)
-    last_purchased_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
-    next_add_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, index=True)
+    last_resolved_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
 
     household: Mapped[Household] = relationship(back_populates="staples")
     shopping_list_items: Mapped[List["ShoppingListItem"]] = relationship(
         back_populates="staple",
         passive_deletes=True,
     )
+
+    @property
+    def eligible_at(self) -> datetime:
+        base_time = self.last_resolved_at or self.created_at
+        return base_time + timedelta(days=self.interval_days * 2 / 3)
 
 
 class ShoppingListItem(TimestampMixin, Base):

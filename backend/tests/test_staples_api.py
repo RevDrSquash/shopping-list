@@ -64,7 +64,7 @@ def test_staple_create_validates_name_and_interval_but_accepts_free_text_quantit
     assert free_text_response.json()["quantity"] == "big bag; brand doesn't matter"
 
 
-def test_staple_create_calculates_next_add_at_from_two_thirds_interval(
+def test_staple_create_derives_eligible_at_from_two_thirds_interval(
     client: TestClient,
 ) -> None:
     login(client)
@@ -77,13 +77,14 @@ def test_staple_create_calculates_next_add_at_from_two_thirds_interval(
     assert response.status_code == 201
     body = response.json()
     created_at = body["created_at"]
-    next_add_at = body["next_add_at"]
+    eligible_at = body["eligible_at"]
     created = datetime.fromisoformat(created_at.replace("Z", "+00:00"))
-    next_add = datetime.fromisoformat(next_add_at.replace("Z", "+00:00"))
-    assert next_add - created == timedelta(days=6)
+    eligible = datetime.fromisoformat(eligible_at.replace("Z", "+00:00"))
+    assert body["last_resolved_at"] is None
+    assert eligible - created == timedelta(days=6)
 
 
-def test_staple_interval_update_recalculates_next_add_at(client: TestClient) -> None:
+def test_staple_interval_update_changes_derived_eligible_at(client: TestClient) -> None:
     login(client)
     create_response = client.post(
         "/staples",
@@ -99,6 +100,6 @@ def test_staple_interval_update_recalculates_next_add_at(client: TestClient) -> 
     assert update_response.status_code == 200
     updated = update_response.json()
     created_at = datetime.fromisoformat(updated["created_at"].replace("Z", "+00:00"))
-    next_add_at = datetime.fromisoformat(updated["next_add_at"].replace("Z", "+00:00"))
+    eligible_at = datetime.fromisoformat(updated["eligible_at"].replace("Z", "+00:00"))
     assert updated["interval_days"] == 3
-    assert next_add_at - created_at == timedelta(days=2)
+    assert eligible_at - created_at == timedelta(days=2)

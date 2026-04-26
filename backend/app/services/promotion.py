@@ -18,11 +18,13 @@ def promote_due_staples(db: Session, now: Optional[datetime] = None) -> int:
     promoted_count = 0
     due_staples = db.scalars(
         select(Staple)
-        .where(Staple.next_add_at <= promotion_time)
-        .order_by(Staple.next_add_at, Staple.created_at)
+        .order_by(Staple.created_at)
     )
 
     for staple in due_staples:
+        if staple.eligible_at > promotion_time:
+            continue
+
         active_item_exists = db.scalar(
             select(
                 exists().where(
