@@ -24,6 +24,7 @@ Two core lists per household:
 | Frontend | Next.js / React |
 | Backend | FastAPI (Python) |
 | Database | Postgres |
+| Local database | Docker Compose-managed Postgres |
 | ORM / migrations | SQLAlchemy ORM 2.x / Alembic |
 | Hosting | Railway |
 | Auth | Google OAuth (no password management) |

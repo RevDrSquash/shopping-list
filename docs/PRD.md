@@ -187,7 +187,7 @@ Since this is a learning project, success is defined primarily by completeness a
 This is a personal learning project with no external deadlines or dependencies. Suggested phasing:
 
 **Phase 1 — Core data model & auth scaffolding**  
-Set up the FastAPI app, SQLAlchemy ORM models, Alembic migrations, Postgres connection, session handling, and the `users`, `households`, and `memberships` model. On first sign-in, provision a user into their own household. Implement a dev-only login bypass (`/dev/login?email=...`, disabled outside `ENV=development`) so all endpoints can be tested without a browser. No real Google OAuth yet; verify with API tests using the bypass.
+Set up the FastAPI app, Docker Compose-managed local Postgres, SQLAlchemy ORM models, Alembic migrations, Postgres connection, session handling, and the `users`, `households`, and `memberships` model. On first sign-in, provision a user into their own household. Implement a dev-only login bypass (`/dev/login?email=...`, disabled outside `ENV=development`) so all endpoints can be tested without a browser. No real Google OAuth yet; verify with API tests using the bypass and a dedicated test database.
 
 **Phase 2 — Staples & promotion**  
 Implement staples CRUD and the cron job for promotion. Verify promotion timing logic with unit tests.
