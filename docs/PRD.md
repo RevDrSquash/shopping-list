@@ -187,19 +187,22 @@ Since this is a learning project, success is defined primarily by completeness a
 This is a personal learning project with no external deadlines or dependencies. Suggested phasing:
 
 **Phase 1 — Core data model & auth scaffolding**  
-Set up Postgres schema, FastAPI app, session handling, and household creation. Implement a dev-only login bypass (`/dev/login?email=...`, disabled outside `ENV=development`) so all endpoints can be tested without a browser. No real Google OAuth yet; verify with API tests using the bypass.
+Set up the FastAPI app, SQLAlchemy ORM models, Alembic migrations, Postgres connection, session handling, and the `users`, `households`, and `memberships` model. On first sign-in, provision a user into their own household. Implement a dev-only login bypass (`/dev/login?email=...`, disabled outside `ENV=development`) so all endpoints can be tested without a browser. No real Google OAuth yet; verify with API tests using the bypass.
 
 **Phase 2 — Staples & promotion**  
 Implement staples CRUD and the cron job for promotion. Verify promotion timing logic with unit tests.
 
-**Phase 3 — Shopping list UI & real auth**  
-Build the Next.js frontend: list review, confirm/remove, add one-offs, check-off. Wire up real Google OAuth in this phase — the callback handler is straightforward to unit test, and the full browser redirect flow can be manually verified once there's a UI to land on.
+**Phase 3 — Shopping list UI with dev auth**  
+Build the Next.js frontend using the development login bypass: list review, confirm/remove, add one-offs, and check-off. Keep backend writes flowing through a small service layer so SSE broadcasting can be added cleanly in the next phase.
 
 **Phase 4 — Real-time sync**  
 Add SSE endpoint and wire up the frontend to consume events and update state.
 
-**Phase 5 — Household management**  
+**Phase 5 — Real Google OAuth**  
+Replace the development login flow with Google OAuth, protected routing, sign-in/sign-out, and callback handling. Keep the development bypass available only in `ENV=development` for API and local workflow testing.
+
+**Phase 6 — Household management**  
 Invite flow, accept/merge logic, leave household.
 
-**Phase 6 — Deploy & polish**  
+**Phase 7 — Deploy & polish**  
 Railway deployment, mobile responsiveness, error handling, empty states.
