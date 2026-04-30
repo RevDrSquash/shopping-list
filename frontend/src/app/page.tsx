@@ -5,6 +5,7 @@ import { AddOneOffItem } from "@/components/AddOneOffItem";
 import { DevLogin } from "@/components/DevLogin";
 import { ShoppingList } from "@/components/ShoppingList";
 import { StaplesManager } from "@/components/StaplesManager";
+import { useHouseholdEvents } from "@/hooks/useHouseholdEvents";
 import {
   addOneOffItem,
   confirmItem,
@@ -62,6 +63,17 @@ export default function Home() {
   useEffect(() => {
     void loadSession();
   }, [loadSession]);
+
+  const refreshHouseholdData = useCallback(() => {
+    void loadAppData().catch((refreshError) => {
+      setError(refreshError instanceof Error ? refreshError.message : "Unable to refresh shopping list");
+    });
+  }, [loadAppData]);
+
+  const householdEvents = useHouseholdEvents({
+    enabled: user !== null,
+    onHouseholdChanged: refreshHouseholdData,
+  });
 
   async function handleLogin(email: string) {
     await devLogin(email);
@@ -136,6 +148,10 @@ export default function Home() {
           <p className="eyebrow">Household shopping</p>
           <h1>Shopping list</h1>
           <p className="muted">Signed in as {user.email}</p>
+          <p className="meta">Household: {user.household_id}</p>
+          <p className={`sync-status sync-status-${householdEvents.status}`}>
+            Real-time: {householdEvents.status} · events received: {householdEvents.receivedCount}
+          </p>
         </div>
         <button type="button" className="secondary" onClick={() => void loadSession()}>
           Refresh

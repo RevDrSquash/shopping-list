@@ -1,6 +1,6 @@
 # Shopping List Frontend
 
-Next.js frontend for the Phase 3 shopping list and staples UI.
+Next.js frontend for the shopping list and staples UI.
 
 ## Setup
 
@@ -16,17 +16,11 @@ Run the development server:
 npm run dev
 ```
 
-The app runs on `http://localhost:3000`.
+The Next.js dev server runs on `http://localhost:3000`, but local browser traffic should go through the Nginx edge proxy at `http://localhost:8080`.
 
 ## API Configuration
 
-By default, browser requests use `NEXT_PUBLIC_API_BASE_URL=/api`. `next.config.ts` proxies `/api/*` to the FastAPI backend at `http://localhost:8000`, which keeps the backend session cookie on the same browser origin during local development.
-
-To point the proxy at a different backend URL, set:
-
-```sh
-API_PROXY_TARGET=http://localhost:8000
-```
+By default, browser requests use `NEXT_PUBLIC_API_BASE_URL=/api`. The local Nginx edge proxy forwards `/api/*` to the FastAPI backend at `http://localhost:8000`, which keeps the backend session cookie on the same browser origin during local development.
 
 To bypass the proxy and call an API base URL directly from the browser, set:
 
@@ -35,6 +29,24 @@ NEXT_PUBLIC_API_BASE_URL=http://localhost:8000
 ```
 
 Direct cross-origin browser calls require the backend to allow CORS credentials.
+
+## Real-Time Sync
+
+Signed-in browser sessions open a Server-Sent Events connection to:
+
+```txt
+GET /events
+```
+
+With the default local setup, the browser connects through `NEXT_PUBLIC_API_BASE_URL=/api`, so the effective frontend URL is `/api/events` and Nginx forwards it to the FastAPI backend. The EventSource is opened with credentials so the backend receives the same session cookie used by `/me`, `/shopping-list`, and `/staples`.
+
+When the backend sends an SSE message with `{ "type": "household_changed" }`, the frontend refetches the authoritative shopping list and staples data. Local mutations still refresh immediately after their API call succeeds, so the originating tab may perform one extra refetch after receiving its own SSE broadcast.
+
+Current limitations:
+
+- Real-time broadcasts are in-process on the API service. Multiple API replicas or separate cron processes need a shared broker before they can broadcast across processes.
+- The frontend refetches full household state instead of applying event patches.
+- Browser EventSource reconnection is used as-is; there is no custom backoff or offline banner yet.
 
 ## Development Auth
 
@@ -54,7 +66,7 @@ Run lightweight UI tests:
 npm test
 ```
 
-The tests cover the development login form, one-off item form, staples management form, review-all staples action, and the grouped shopping-list actions for confirm, skip, and purchase.
+The tests cover the development login form, one-off item form, staples management form, review-all staples action, grouped shopping-list actions for confirm, skip, and purchase, and the EventSource subscription behavior.
 
 ## Staples Management
 
@@ -67,12 +79,12 @@ Signed-in users can manage recurring household staples from the main page:
 
 The review-all action is a normal user workflow. It skips the usual `eligible_at` timing check, but still avoids duplicates for staples that already have active `needs_review` or `confirmed` shopping-list items.
 
-## Phase 3 Manual Verification
+## Manual Verification
 
-From the project root, start Postgres:
+From the project root, start Postgres and the Nginx edge proxy:
 
 ```sh
-docker compose up -d postgres
+docker compose up -d postgres edge
 ```
 
 From `backend/`, install dependencies, migrate, and start the API:
@@ -90,7 +102,7 @@ npm install
 npm run dev
 ```
 
-Open `http://localhost:3000`, sign in with the dev auth form, and verify:
+Open `http://localhost:8080`, sign in with the dev auth form, and verify:
 
 - Unauthenticated users see the development login form.
 - A staple can be added, edited, and deleted from the staples section.
@@ -102,8 +114,26 @@ Open `http://localhost:3000`, sign in with the dev auth form, and verify:
 - Purchased removes a confirmed item from the active list.
 - The layout remains usable at a narrow mobile width.
 
+For real-time sync, open two browser tabs signed in as the same development user, or as users that belong to the same household. Add a one-off item, create or edit a staple, confirm, skip, or purchase an item in one tab and verify the other tab updates within about one second without pressing **Refresh**. Then reload or close one tab and reopen it to confirm the EventSource reconnects cleanly.
+
 To test scheduled promotion separately, seed staples through the backend API and run:
 
 ```sh
 poetry run python -m app.jobs.promote_staples
 ```
+
+## Railway Edge Service
+
+Railway should run three services:
+
+- `frontend`: the Next.js app.
+- `backend`: the FastAPI API.
+- `edge`: Nginx, using `nginx/default.conf.template`, attached to the public domain.
+
+Set these variables on the Railway `edge` service:
+
+- `PORT=$PORT`
+- `BACKEND_HOST=backend.railway.internal:8000`
+- `FRONTEND_HOST=frontend.railway.internal:3000`
+
+The same template is used locally and on Railway. Only the upstream hostnames and listen port change by environment.

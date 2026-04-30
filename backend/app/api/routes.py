@@ -6,12 +6,14 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response,
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 from sqlalchemy import select
 from sqlalchemy.orm import Session
+from starlette.responses import StreamingResponse
 
 from app.api.deps import get_current_household, get_current_user
 from app.core.config import Settings, get_settings
 from app.db.models import Household, Membership, MembershipStatus, ShoppingListItem, ShoppingListItemStatus, Staple, User
 from app.db.session import get_db
 from app.services.auth import normalize_email, provision_user_for_email
+from app.services.events import household_event_stream, household_events
 from app.services.promotion import promote_all_inactive_staples
 from app.services.shopping_list import add_one_off_item, confirm_item, list_active_items, resolve_item
 from app.services.staples import create_staple, get_staple, list_staples
@@ -182,6 +184,21 @@ def get_shopping_list(
     return list_active_items(db, household.id)
 
 
+@router.get("/events")
+async def get_events(
+    request: Request,
+    household: Household = Depends(get_current_household),
+) -> StreamingResponse:
+    return StreamingResponse(
+        household_event_stream(request, household.id),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "X-Accel-Buffering": "no",
+        },
+    )
+
+
 @router.post(
     "/shopping-list/items",
     response_model=ShoppingListItemResponse,
@@ -199,6 +216,7 @@ def post_shopping_list_item(
         quantity=payload.quantity,
     )
     db.commit()
+    household_events.broadcast_household_changed(household.id)
     db.refresh(item)
     return item
 
@@ -214,6 +232,7 @@ def post_confirm_shopping_list_item(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Shopping list item not found")
 
     db.commit()
+    household_events.broadcast_household_changed(household.id)
     db.refresh(item)
     return item
 
@@ -228,6 +247,7 @@ def post_skip_shopping_list_item(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Shopping list item not found")
 
     db.commit()
+    household_events.broadcast_household_changed(household.id)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
@@ -241,6 +261,7 @@ def post_purchase_shopping_list_item(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Shopping list item not found")
 
     db.commit()
+    household_events.broadcast_household_changed(household.id)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
@@ -258,6 +279,7 @@ def post_staple(
         interval_days=payload.interval_days,
     )
     db.commit()
+    household_events.broadcast_household_changed(household.id)
     db.refresh(staple)
     return staple
 
@@ -269,6 +291,8 @@ def post_promote_all_staples(
 ) -> PromotionResponse:
     promoted_count = promote_all_inactive_staples(db, household.id)
     db.commit()
+    if promoted_count > 0:
+        household_events.broadcast_household_changed(household.id)
     return PromotionResponse(promoted_count=promoted_count)
 
 
@@ -292,6 +316,8 @@ def patch_staple(
         staple.interval_days = updates["interval_days"]
 
     db.commit()
+    if updates:
+        household_events.broadcast_household_changed(household.id)
     db.refresh(staple)
     return staple
 
@@ -308,4 +334,5 @@ def delete_staple(
 
     db.delete(staple)
     db.commit()
+    household_events.broadcast_household_changed(household.id)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
