@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { AddOneOffItem } from "@/components/AddOneOffItem";
-import { DevLogin } from "@/components/DevLogin";
+import { SignIn } from "@/components/SignIn";
 import { ShoppingList } from "@/components/ShoppingList";
 import { StaplesManager } from "@/components/StaplesManager";
 import { useHouseholdEvents } from "@/hooks/useHouseholdEvents";
@@ -12,9 +12,12 @@ import {
   createStaple,
   deleteStaple,
   devLogin,
+  getConfig,
   getCurrentUser,
   getShoppingList,
   getStaples,
+  logout,
+  type AppConfig,
   promoteAllStaples,
   purchaseItem,
   skipItem,
@@ -26,6 +29,7 @@ import {
 } from "@/lib/api";
 
 export default function Home() {
+  const [config, setConfig] = useState<AppConfig | null>(null);
   const [user, setUser] = useState<CurrentUser | null>(null);
   const [items, setItems] = useState<ShoppingListItem[]>([]);
   const [staples, setStaples] = useState<Staple[]>([]);
@@ -41,28 +45,46 @@ export default function Home() {
     setStaples(householdStaples);
   }, []);
 
+  const loadCurrentUser = useCallback(async () => {
+    const currentUser = await getCurrentUser();
+    setUser(currentUser);
+    if (currentUser) {
+      await loadAppData();
+    } else {
+      setItems([]);
+      setStaples([]);
+    }
+  }, [loadAppData]);
+
   const loadSession = useCallback(async () => {
     setError(null);
     setIsLoading(true);
     try {
-      const currentUser = await getCurrentUser();
-      setUser(currentUser);
-      if (currentUser) {
-        await loadAppData();
-      } else {
-        setItems([]);
-        setStaples([]);
-      }
+      await loadCurrentUser();
     } catch (sessionError) {
       setError(sessionError instanceof Error ? sessionError.message : "Unable to load session");
     } finally {
       setIsLoading(false);
     }
-  }, [loadAppData]);
+  }, [loadCurrentUser]);
 
   useEffect(() => {
-    void loadSession();
-  }, [loadSession]);
+    async function loadInitialState() {
+      setError(null);
+      setIsLoading(true);
+      try {
+        const appConfig = await getConfig();
+        setConfig(appConfig);
+        await loadCurrentUser();
+      } catch (initialLoadError) {
+        setError(initialLoadError instanceof Error ? initialLoadError.message : "Unable to load session");
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    void loadInitialState();
+  }, [loadCurrentUser]);
 
   const refreshHouseholdData = useCallback(() => {
     void loadAppData().catch((refreshError) => {
@@ -78,6 +100,15 @@ export default function Home() {
   async function handleLogin(email: string) {
     await devLogin(email);
     await loadSession();
+  }
+
+  async function handleLogout() {
+    try {
+      await logout();
+      await loadSession();
+    } catch (logoutError) {
+      setError(logoutError instanceof Error ? logoutError.message : "Unable to sign out");
+    }
   }
 
   async function refreshAfterMutation(mutation: () => Promise<unknown>) {
@@ -135,7 +166,13 @@ export default function Home() {
   if (!user) {
     return (
       <main className="page-shell center-shell">
-        <DevLogin onLogin={handleLogin} />
+        {config ? (
+          <SignIn config={config} onLogin={handleLogin} />
+        ) : (
+          <section className="card auth-card">
+            <p className="error">Unable to load authentication options.</p>
+          </section>
+        )}
         {error ? <p className="error">{error}</p> : null}
       </main>
     );
@@ -153,9 +190,14 @@ export default function Home() {
             Real-time: {householdEvents.status} · events received: {householdEvents.receivedCount}
           </p>
         </div>
-        <button type="button" className="secondary" onClick={() => void loadSession()}>
-          Refresh
-        </button>
+        <div className="hero-actions">
+          <button type="button" className="secondary" onClick={() => void loadSession()}>
+            Refresh
+          </button>
+          <button type="button" className="ghost" onClick={() => void handleLogout()}>
+            Sign out
+          </button>
+        </div>
       </header>
 
       {error ? <p className="error banner">{error}</p> : null}

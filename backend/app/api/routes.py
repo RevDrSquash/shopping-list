@@ -6,14 +6,15 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response,
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 from sqlalchemy import select
 from sqlalchemy.orm import Session
-from starlette.responses import StreamingResponse
+from starlette.responses import RedirectResponse, StreamingResponse
 
 from app.api.deps import get_current_household, get_current_user
 from app.core.config import Settings, get_settings
 from app.db.models import Household, Membership, MembershipStatus, ShoppingListItem, ShoppingListItemStatus, Staple, User
 from app.db.session import get_db
-from app.services.auth import normalize_email, provision_user_for_email
+from app.services.auth import normalize_email, provision_user_for_email, provision_user_for_google_identity
 from app.services.events import household_event_stream, household_events
+from app.services.google_oauth import oauth
 from app.services.promotion import promote_all_inactive_staples
 from app.services.shopping_list import add_one_off_item, confirm_item, list_active_items, resolve_item
 from app.services.staples import create_staple, get_staple, list_staples
@@ -117,6 +118,14 @@ def health() -> dict[str, str]:
     return {"status": "ok"}
 
 
+@router.get("/config")
+def config(settings: Settings = Depends(get_settings)) -> dict[str, bool]:
+    return {
+        "dev_login_enabled": settings.dev_login_enabled,
+        "google_oauth_enabled": settings.google_oauth_enabled,
+    }
+
+
 @router.get("/dev/login")
 def dev_login(
     request: Request,
@@ -142,6 +151,61 @@ def dev_login(
     request.session["user_id"] = str(user.id)
 
     return {"user": {"id": str(user.id), "email": user.email}}
+
+
+@router.get("/auth/google/login")
+async def google_login(
+    request: Request,
+    settings: Settings = Depends(get_settings),
+):
+    if not settings.google_oauth_enabled:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Google OAuth is not configured",
+        )
+
+    redirect_uri = f"{settings.app_base_url}/api/auth/google/callback"
+    return await oauth.google.authorize_redirect(request, redirect_uri)
+
+
+@router.get("/auth/google/callback")
+async def google_callback(
+    request: Request,
+    db: Session = Depends(get_db),
+    settings: Settings = Depends(get_settings),
+) -> RedirectResponse:
+    if not settings.google_oauth_enabled:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Google OAuth is not configured",
+        )
+
+    token = await oauth.google.authorize_access_token(request)
+    userinfo = token.get("userinfo") or {}
+    if userinfo.get("email_verified") is not True:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Google account email is not verified",
+        )
+
+    email = userinfo.get("email")
+    sub = userinfo.get("sub")
+    if not email or not sub:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Google account identity is incomplete",
+        )
+
+    user = provision_user_for_google_identity(db, email=email, sub=sub)
+    db.commit()
+    request.session["user_id"] = str(user.id)
+    return RedirectResponse("/", status_code=status.HTTP_302_FOUND)
+
+
+@router.post("/auth/logout", status_code=status.HTTP_204_NO_CONTENT)
+def logout(request: Request) -> Response:
+    request.session.clear()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @router.get("/me")

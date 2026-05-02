@@ -21,7 +21,7 @@ This is a personal learning project for a simple household shopping list app. Ke
 - Backend: FastAPI with Python dependency management through Poetry.
 - Database: Postgres.
 - Hosting target: Railway.
-- Auth: Google OAuth only, with a development-only login bypass allowed for testing.
+- Auth: Google OAuth (OIDC Authorization Code Flow with PKCE, via Authlib), with a development-only login bypass allowed for testing. The dev bypass at `/dev/login` stays gated by `ENV in {development, test}` even after Google sign-in is wired up; enabling one does not disable the other.
 - Real-time updates: Server-Sent Events scoped per household.
 
 ## Core Invariants

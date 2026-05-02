@@ -48,14 +48,18 @@ poetry run uvicorn app.main:app --reload
 Useful endpoints:
 
 - `GET /health`
-- `GET /dev/login?email=person@example.com`
+- `GET /config`
 - `GET /me`
 - `GET /staples`
 - `POST /staples`
 - `PATCH /staples/{staple_id}`
 - `DELETE /staples/{staple_id}`
+- `GET /auth/google/login`
+- `GET /auth/google/callback`
+- `POST /auth/logout`
+- `GET /dev/login?email=person@example.com`
 
-`/dev/login` only works when `ENV` is `development` or `test`.
+`/dev/login` only works when `ENV` is `development` or `test`. Google sign-in is configured separately — see [docs/google-oauth.md](../docs/google-oauth.md) for Cloud Console setup, env vars, and a description of each `/auth/*` route.
 
 ## Staple Promotion
 

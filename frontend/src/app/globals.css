@@ -37,7 +37,8 @@ input {
   font: inherit;
 }
 
-button {
+button,
+.button-link {
   min-height: 2.75rem;
   border: 0;
   border-radius: 999px;
@@ -48,8 +49,16 @@ button {
   font-weight: 700;
 }
 
-button:hover:not(:disabled) {
+button:hover:not(:disabled),
+.button-link:hover {
   background: var(--primary-strong);
+}
+
+.button-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
 }
 
 button:disabled {
@@ -152,6 +161,11 @@ label {
   padding: clamp(1.2rem, 5vw, 2rem);
 }
 
+.hero-actions {
+  display: flex;
+  gap: 0.7rem;
+}
+
 .card {
   padding: clamp(1rem, 4vw, 1.4rem);
 }
@@ -162,6 +176,18 @@ label {
 
 .auth-card {
   width: min(100%, 28rem);
+}
+
+.google-sign-in,
+.dev-bypass {
+  margin-top: 1rem;
+}
+
+.dev-bypass {
+  display: grid;
+  gap: 0.8rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
 }
 
 .stack {
@@ -350,10 +376,16 @@ label {
     align-items: stretch;
   }
 
+  .hero-actions {
+    display: grid;
+    gap: 0.7rem;
+  }
+
   .item-actions button,
   .dev-action-row,
   .dev-action-row button,
-  .hero button {
+  .hero button,
+  .button-link {
     width: 100%;
   }
 

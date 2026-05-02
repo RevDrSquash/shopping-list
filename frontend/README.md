@@ -48,15 +48,16 @@ Current limitations:
 - The frontend refetches full household state instead of applying event patches.
 - Browser EventSource reconnection is used as-is; there is no custom backoff or offline banner yet.
 
-## Development Auth
+## Authentication
 
-Phase 3 uses the backend development login endpoint instead of Google OAuth. When `/me` returns unauthenticated, the app shows an email form that calls:
+When `/me` returns unauthenticated, the app fetches `GET /config` and renders the sign-in card based on the result:
 
-```txt
-GET /dev/login?email=person@example.com
-```
+- If `google_oauth_enabled` is true, a "Sign in with Google" link points the browser at `GET /api/auth/google/login`. The backend handles the OIDC redirect dance and sets a session cookie before redirecting back to `/`.
+- If `dev_login_enabled` is true, a "Development bypass" form posts an email to `GET /dev/login?email=...` so local development and tests can skip the OAuth round-trip.
 
-The backend creates or reuses the user, attaches a household membership, and sets the session cookie. All frontend API calls include `credentials: "include"` so the session is sent on later `/me` and shopping-list requests.
+All frontend API calls include `credentials: "include"` so the session cookie is sent on later `/me`, shopping-list, and SSE requests regardless of how the session was started. A "Sign out" button in the header calls `POST /auth/logout` and reloads the session.
+
+For Google OAuth setup (Cloud Console steps and env vars), see [../docs/google-oauth.md](../docs/google-oauth.md).
 
 ## Tests
 
@@ -66,7 +67,7 @@ Run lightweight UI tests:
 npm test
 ```
 
-The tests cover the development login form, one-off item form, staples management form, review-all staples action, grouped shopping-list actions for confirm, skip, and purchase, and the EventSource subscription behavior.
+The tests cover the sign-in card (Google button plus optional development bypass form), one-off item form, staples management form, review-all staples action, grouped shopping-list actions for confirm, skip, and purchase, and the EventSource subscription behavior.
 
 ## Staples Management
 
@@ -102,9 +103,9 @@ npm install
 npm run dev
 ```
 
-Open `http://localhost:8080`, sign in with the dev auth form, and verify:
+Open `http://localhost:8080`, sign in (Google when configured, otherwise the development bypass form), and verify:
 
-- Unauthenticated users see the development login form.
+- Unauthenticated users see the sign-in card with the Google button and/or the development bypass form, depending on `/config`.
 - A staple can be added, edited, and deleted from the staples section.
 - Review all staples now adds inactive staples to the `Needs review` section without waiting for the interval.
 - A one-off item can be added and appears in the confirmed section.

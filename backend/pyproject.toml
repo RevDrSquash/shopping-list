@@ -15,10 +15,11 @@ alembic = "*"
 psycopg = { extras = ["binary"], version = "*" }
 pydantic-settings = "*"
 itsdangerous = "*"
+authlib = "*"
+httpx = "*"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "*"
-httpx = "*"
 
 [build-system]
 requires = ["poetry-core"]
