@@ -34,12 +34,14 @@ class MockEventSource {
 
 function TestSubscriber({
   enabled,
+  householdId = "household",
   onHouseholdChanged,
 }: {
   enabled: boolean;
+  householdId?: string | null;
   onHouseholdChanged: () => void;
 }) {
-  const events = useHouseholdEvents({ enabled, onHouseholdChanged });
+  const events = useHouseholdEvents({ enabled, householdId, onHouseholdChanged });
   return (
     <p>
       {events.status}:{events.receivedCount}
@@ -88,6 +90,19 @@ describe("useHouseholdEvents", () => {
     rerender(<TestSubscriber enabled onHouseholdChanged={vi.fn()} />);
 
     expect(MockEventSource.instances).toHaveLength(1);
+  });
+
+  it("reconnects when the household changes", () => {
+    const onHouseholdChanged = vi.fn();
+    const { rerender } = render(
+      <TestSubscriber enabled householdId="first-household" onHouseholdChanged={onHouseholdChanged} />,
+    );
+    const firstSource = MockEventSource.instances[0];
+
+    rerender(<TestSubscriber enabled householdId="second-household" onHouseholdChanged={onHouseholdChanged} />);
+
+    expect(firstSource?.close).toHaveBeenCalledTimes(1);
+    expect(MockEventSource.instances).toHaveLength(2);
   });
 
   it("refreshes when a household event arrives", () => {

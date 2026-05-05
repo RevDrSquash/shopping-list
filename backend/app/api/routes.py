@@ -15,6 +15,19 @@ from app.db.session import get_db
 from app.services.auth import normalize_email, provision_user_for_email, provision_user_for_google_identity
 from app.services.events import household_event_stream, household_events
 from app.services.google_oauth import oauth
+from app.services.households import (
+    InvitationConflictError,
+    InvitationView,
+    SoleMemberLeaveError,
+    accept_invitation,
+    cancel_invitation,
+    decline_invitation,
+    household_member_count,
+    invite_user_by_email,
+    leave_household,
+    list_pending_invitations_for_household,
+    list_pending_invitations_for_user,
+)
 from app.services.promotion import promote_all_inactive_staples
 from app.services.shopping_list import add_one_off_item, confirm_item, list_active_items, resolve_item
 from app.services.staples import create_staple, get_staple, list_staples
@@ -113,6 +126,37 @@ class ShoppingListItemResponse(BaseModel):
     updated_at: datetime
 
 
+class CurrentUserResponse(BaseModel):
+    id: UUID
+    email: str
+    household_id: UUID
+    household_member_count: int
+
+
+class InvitationCreate(BaseModel):
+    email: str = Field(min_length=3, max_length=320)
+
+    @field_validator("email")
+    @classmethod
+    def email_must_be_normalized_address(cls, value: str) -> str:
+        normalized = normalize_email(value)
+        if "@" not in normalized:
+            raise ValueError("Email must contain @")
+        return normalized
+
+
+class InvitationResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    household_id: UUID
+    household_name: str
+    user_id: UUID
+    user_email: str
+    status: MembershipStatus
+    created_at: datetime
+
+
 @router.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
@@ -208,11 +252,11 @@ def logout(request: Request) -> Response:
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
-@router.get("/me")
+@router.get("/me", response_model=CurrentUserResponse)
 def me(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
-) -> dict[str, str]:
+) -> CurrentUserResponse:
     membership = db.scalar(
         select(Membership).where(
             Membership.user_id == current_user.id,
@@ -225,11 +269,115 @@ def me(
             detail="Household membership not found",
         )
 
-    return {
-        "id": str(current_user.id),
-        "email": current_user.email,
-        "household_id": str(membership.household_id),
-    }
+    return CurrentUserResponse(
+        id=current_user.id,
+        email=current_user.email,
+        household_id=membership.household_id,
+        household_member_count=household_member_count(db, membership.household_id),
+    )
+
+
+@router.post(
+    "/households/invitations",
+    response_model=InvitationResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+def post_household_invitation(
+    payload: InvitationCreate,
+    household: Household = Depends(get_current_household),
+    db: Session = Depends(get_db),
+) -> InvitationView:
+    try:
+        invitation = invite_user_by_email(db, household, payload.email)
+    except InvitationConflictError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="User already has an invitation or membership for this household",
+        ) from exc
+
+    db.commit()
+    household_events.broadcast_household_changed(household.id)
+    return invitation
+
+
+@router.get("/households/invitations", response_model=list[InvitationResponse])
+def get_household_invitations(
+    household: Household = Depends(get_current_household),
+    db: Session = Depends(get_db),
+) -> list[InvitationView]:
+    return list_pending_invitations_for_household(db, household.id)
+
+
+@router.delete("/households/invitations/{invitation_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_household_invitation(
+    invitation_id: UUID,
+    household: Household = Depends(get_current_household),
+    db: Session = Depends(get_db),
+) -> Response:
+    if not cancel_invitation(db, household.id, invitation_id):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Invitation not found")
+
+    db.commit()
+    household_events.broadcast_household_changed(household.id)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.get("/invitations", response_model=list[InvitationResponse])
+def get_invitations(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> list[InvitationView]:
+    return list_pending_invitations_for_user(db, current_user.id)
+
+
+@router.post("/invitations/{invitation_id}/accept", status_code=status.HTTP_204_NO_CONTENT)
+def post_accept_invitation(
+    invitation_id: UUID,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> Response:
+    household_id = accept_invitation(db, current_user, invitation_id)
+    if household_id is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Invitation not found")
+
+    db.commit()
+    household_events.broadcast_household_changed(household_id)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.post("/invitations/{invitation_id}/decline", status_code=status.HTTP_204_NO_CONTENT)
+def post_decline_invitation(
+    invitation_id: UUID,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> Response:
+    household_id = decline_invitation(db, current_user, invitation_id)
+    if household_id is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Invitation not found")
+
+    db.commit()
+    household_events.broadcast_household_changed(household_id)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.post("/households/leave", status_code=status.HTTP_204_NO_CONTENT)
+def post_leave_household(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> Response:
+    try:
+        old_household_id = leave_household(db, current_user)
+    except SoleMemberLeaveError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Cannot leave a household with only one member",
+        ) from exc
+    except LookupError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Household membership not found") from exc
+
+    db.commit()
+    household_events.broadcast_household_changed(old_household_id)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @router.get("/staples", response_model=list[StapleResponse])

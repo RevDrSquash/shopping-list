@@ -206,8 +206,13 @@ label {
   margin-bottom: 1rem;
 }
 
+.household-card {
+  margin-bottom: 1rem;
+}
+
 .staple-form,
-.staple-edit-form {
+.staple-edit-form,
+.invite-form {
   display: grid;
   gap: 0.8rem;
 }
@@ -216,6 +221,25 @@ label {
   grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.9fr) minmax(8rem, 0.5fr) auto;
   align-items: end;
   margin-top: 1rem;
+}
+
+.invite-form {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  margin-top: 0.8rem;
+}
+
+.household-section {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+
+.leave-household {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
 }
 
 .staple-list {
@@ -367,6 +391,7 @@ label {
   .hero,
   .add-form,
   .staple-form,
+  .invite-form,
   .list-grid {
     grid-template-columns: 1fr;
   }
@@ -387,6 +412,10 @@ label {
   .hero button,
   .button-link {
     width: 100%;
+  }
+
+  .leave-household {
+    display: grid;
   }
 
   .dev-action-row {

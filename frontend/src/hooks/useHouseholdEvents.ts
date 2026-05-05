@@ -12,10 +12,15 @@ export type HouseholdEventsState = {
 
 type UseHouseholdEventsOptions = {
   enabled: boolean;
+  householdId: string | null;
   onHouseholdChanged: () => void;
 };
 
-export function useHouseholdEvents({ enabled, onHouseholdChanged }: UseHouseholdEventsOptions): HouseholdEventsState {
+export function useHouseholdEvents({
+  enabled,
+  householdId,
+  onHouseholdChanged,
+}: UseHouseholdEventsOptions): HouseholdEventsState {
   const [status, setStatus] = useState<HouseholdEventsStatus>("idle");
   const [receivedCount, setReceivedCount] = useState(0);
 
@@ -58,7 +63,7 @@ export function useHouseholdEvents({ enabled, onHouseholdChanged }: UseHousehold
       events.removeEventListener("household_changed", handleHouseholdChanged);
       events.close();
     };
-  }, [enabled, onHouseholdChanged]);
+  }, [enabled, householdId, onHouseholdChanged]);
 
   return { status, receivedCount };
 }

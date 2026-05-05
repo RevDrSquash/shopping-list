@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { AddOneOffItem } from "@/components/AddOneOffItem";
+import { HouseholdManager } from "@/components/HouseholdManager";
 import { SignIn } from "@/components/SignIn";
 import { ShoppingList } from "@/components/ShoppingList";
 import { StaplesManager } from "@/components/StaplesManager";
@@ -94,6 +95,7 @@ export default function Home() {
 
   const householdEvents = useHouseholdEvents({
     enabled: user !== null,
+    householdId: user?.household_id ?? null,
     onHouseholdChanged: refreshHouseholdData,
   });
 
@@ -201,6 +203,8 @@ export default function Home() {
       </header>
 
       {error ? <p className="error banner">{error}</p> : null}
+
+      <HouseholdManager currentUser={user} onMembershipChanged={loadSession} />
 
       <StaplesManager
         staples={staples}
