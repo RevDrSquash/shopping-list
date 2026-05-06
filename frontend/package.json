@@ -16,6 +16,7 @@
     "react-dom": "latest"
   },
   "devDependencies": {
+    "@tailwindcss/postcss": "^4.2.4",
     "@testing-library/jest-dom": "latest",
     "@testing-library/react": "latest",
     "@testing-library/user-event": "latest",
@@ -26,6 +27,8 @@
     "eslint": "latest",
     "eslint-config-next": "latest",
     "jsdom": "latest",
+    "postcss": "^8.5.12",
+    "tailwindcss": "^4.2.4",
     "typescript": "latest",
     "vitest": "latest"
   },
