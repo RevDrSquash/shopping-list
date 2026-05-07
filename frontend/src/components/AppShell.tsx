@@ -32,6 +32,7 @@ import {
   type StaplePayload,
 } from "@/lib/api";
 import { BottomNav } from "@/components/layout/BottomNav";
+import { PageMain } from "@/components/layout/PageMain";
 
 type AppShellContextValue = {
   user: CurrentUser;
@@ -211,11 +212,11 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   if (isLoading) {
     return (
-      <main className="grid min-h-screen place-items-center px-container-padding">
-        <section className="w-full max-w-md rounded-xl bg-surface-container-lowest p-lg text-center shadow-card">
+      <PageMain variant="centered">
+        <section className="w-full max-w-page-narrow rounded-xl bg-surface-container-lowest p-lg text-center shadow-card">
           <p className="text-body-md text-on-surface-variant">Loading your household...</p>
         </section>
-      </main>
+      </PageMain>
     );
   }
 
@@ -225,14 +226,14 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <AppShellContext.Provider value={value}>
-      <main className="mx-auto min-h-screen w-full max-w-3xl px-container-padding pb-[calc(112px+env(safe-area-inset-bottom))]">
+      <PageMain variant="app">
         {error ? (
           <p className="mb-md rounded-xl bg-error-container px-md py-sm text-label-md text-error" role="alert">
             {error}
           </p>
         ) : null}
         {children}
-      </main>
+      </PageMain>
       <BottomNav />
     </AppShellContext.Provider>
   );

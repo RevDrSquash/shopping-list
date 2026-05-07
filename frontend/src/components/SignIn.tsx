@@ -28,7 +28,7 @@ export function SignIn({ config, onLogin }: SignInProps) {
   }
 
   return (
-    <section className="w-full max-w-md text-center" aria-labelledby="sign-in-title">
+    <section className="w-full max-w-page-narrow text-center" aria-labelledby="sign-in-title">
       <div className="mx-auto mb-md grid h-20 w-20 place-items-center rounded-full bg-primary-fixed text-primary">
         <span className="material-symbols-outlined text-[42px]" aria-hidden="true">
           home

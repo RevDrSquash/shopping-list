@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { PageMain } from "@/components/layout/PageMain";
 import { SignIn } from "@/components/SignIn";
 import { devLogin, getConfig, getCurrentUser, type AppConfig } from "@/lib/api";
 
@@ -38,13 +39,13 @@ export default function SignInPage() {
   }
 
   return (
-    <main className="grid min-h-screen place-items-center px-container-padding py-xl">
+    <PageMain variant="auth">
       {isLoading ? <p className="text-body-md text-on-surface-variant">Loading sign-in options...</p> : null}
       {!isLoading && config ? <SignIn config={config} onLogin={handleLogin} /> : null}
       {!isLoading && !config && !error ? (
         <p className="rounded-xl bg-error-container p-md text-error">No sign-in options are available.</p>
       ) : null}
       {error ? <p className="mt-md rounded-xl bg-error-container p-md text-error">{error}</p> : null}
-    </main>
+    </PageMain>
   );
 }

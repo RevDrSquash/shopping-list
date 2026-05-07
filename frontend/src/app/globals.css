@@ -34,6 +34,9 @@
   --spacing-gutter: 16px;
   --spacing-container-padding: 20px;
 
+  --container-page-narrow: 28rem;
+  --container-page-default: 48rem;
+
   --text-body-md: 16px;
   --text-body-md--line-height: 24px;
   --text-body-lg: 18px;
@@ -158,18 +161,6 @@
       "opsz" 24;
   }
 
-  .page-shell {
-    width: min(100%, 58rem);
-    margin: 0 auto;
-    padding: 1.2rem;
-  }
-
-  .center-shell {
-    display: grid;
-    min-height: 100vh;
-    place-items: center;
-  }
-
   .hero,
   .card {
     border: 1px solid var(--color-outline-variant);
@@ -204,10 +195,6 @@
 
   .card + .card {
     margin-top: 1rem;
-  }
-
-  .auth-card {
-    width: min(100%, 28rem);
   }
 
   button,
@@ -430,41 +417,5 @@
 
   .banner {
     margin-bottom: 1rem;
-  }
-}
-
-@media (max-width: 720px) {
-  .hero,
-  .add-form,
-  .staple-form,
-  .invite-form,
-  .list-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .hero {
-    display: grid;
-    align-items: stretch;
-  }
-
-  .hero-actions {
-    display: grid;
-    gap: 0.7rem;
-  }
-
-  .item-actions button,
-  .dev-action-row,
-  .dev-action-row button,
-  .hero button,
-  .button-link {
-    width: 100%;
-  }
-
-  .leave-household {
-    display: grid;
-  }
-
-  .dev-action-row {
-    display: grid;
   }
 }

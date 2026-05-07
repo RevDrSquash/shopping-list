@@ -14,10 +14,10 @@ export function BottomNav() {
 
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-30 border-t border-outline-variant bg-surface-container-lowest/95 px-md pb-[max(12px,env(safe-area-inset-bottom))] pt-sm shadow-card backdrop-blur"
+      className="fixed inset-x-0 bottom-0 z-30 pb-[max(12px,env(safe-area-inset-bottom))] pt-sm"
       aria-label="Primary"
     >
-      <div className="mx-auto grid w-full max-w-3xl grid-cols-3 gap-sm">
+      <div className="mx-auto grid w-full max-w-page-default grid-cols-3 gap-sm border-t border-outline-variant bg-surface-container-lowest/95 px-md py-sm shadow-card backdrop-blur sm:rounded-full sm:border">
         {tabs.map((tab) => {
           const isActive = pathname === tab.href || pathname.startsWith(`${tab.href}/`);
           return (

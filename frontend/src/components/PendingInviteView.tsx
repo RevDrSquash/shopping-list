@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { PageMain } from "@/components/layout/PageMain";
 import {
   acceptInvitation,
   declineInvitation,
@@ -76,9 +77,9 @@ export function PendingInviteView() {
 
   if (isLoading) {
     return (
-      <main className="grid min-h-screen place-items-center px-container-padding">
+      <PageMain variant="centered">
         <p className="text-body-md text-on-surface-variant">Loading invitation...</p>
-      </main>
+      </PageMain>
     );
   }
 
@@ -87,7 +88,7 @@ export function PendingInviteView() {
   }
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-md flex-col px-container-padding py-lg">
+    <PageMain variant="flow">
       <header className="mb-xl text-center">
         <p className="text-headline-lg">Household</p>
       </header>
@@ -153,7 +154,7 @@ export function PendingInviteView() {
           </button>
         </div>
       </section>
-    </main>
+    </PageMain>
   );
 }
 
