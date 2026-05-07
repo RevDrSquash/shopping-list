@@ -12,19 +12,10 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
-    env: str = Field(default="development", validation_alias="ENV")
-    database_url: str = Field(
-        default="postgresql+psycopg://shopping_list:CHANGE_ME@localhost:5432/shopping_list",
-        validation_alias="DATABASE_URL",
-    )
-    test_database_url: str = Field(
-        default="postgresql+psycopg://shopping_list:CHANGE_ME@localhost:5432/shopping_list_test",
-        validation_alias="TEST_DATABASE_URL",
-    )
-    session_secret: str = Field(
-        default="development-session-secret",
-        validation_alias="SESSION_SECRET",
-    )
+    env: str = Field(default="production", validation_alias="ENV")
+    database_url: str = Field(validation_alias="DATABASE_URL")
+    test_database_url: str = Field(validation_alias="TEST_DATABASE_URL")
+    session_secret: str = Field(validation_alias="SESSION_SECRET")
     app_base_url: str = Field(
         default="http://localhost:8080",
         validation_alias="APP_BASE_URL",

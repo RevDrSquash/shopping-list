@@ -25,8 +25,8 @@ cp .env.example .env
 The default local URLs are:
 
 ```sh
-DATABASE_URL=postgresql+psycopg://shopping_list:CHANGE_ME@localhost:5432/shopping_list
-TEST_DATABASE_URL=postgresql+psycopg://shopping_list:CHANGE_ME@localhost:5432/shopping_list_test
+DATABASE_URL=postgresql+psycopg://shopping_list:change-me-locally@localhost:5432/shopping_list
+TEST_DATABASE_URL=postgresql+psycopg://shopping_list:change-me-locally@localhost:5432/shopping_list_test
 ```
 
 ## Database
