@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { getHouseholdEventsUrl } from "@/lib/api";
 
 export type HouseholdEventsStatus = "idle" | "connecting" | "open" | "error";
@@ -23,6 +23,13 @@ export function useHouseholdEvents({
 }: UseHouseholdEventsOptions): HouseholdEventsState {
   const [status, setStatus] = useState<HouseholdEventsStatus>("idle");
   const [receivedCount, setReceivedCount] = useState(0);
+
+  // Keep the latest callback in a ref so changes to its identity don't
+  // tear down and re-open the EventSource on every parent re-render.
+  const onHouseholdChangedRef = useRef(onHouseholdChanged);
+  useEffect(() => {
+    onHouseholdChangedRef.current = onHouseholdChanged;
+  }, [onHouseholdChanged]);
 
   useEffect(() => {
     if (!enabled) {
@@ -48,7 +55,7 @@ export function useHouseholdEvents({
       }
 
       setReceivedCount((count) => count + 1);
-      onHouseholdChanged();
+      onHouseholdChangedRef.current();
     };
 
     events.addEventListener("open", handleOpen);
@@ -63,7 +70,7 @@ export function useHouseholdEvents({
       events.removeEventListener("household_changed", handleHouseholdChanged);
       events.close();
     };
-  }, [enabled, householdId, onHouseholdChanged]);
+  }, [enabled, householdId]);
 
   return { status, receivedCount };
 }

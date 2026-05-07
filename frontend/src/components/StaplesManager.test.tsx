@@ -35,15 +35,14 @@ function renderStaplesManager(overrides: Partial<React.ComponentProps<typeof Sta
 }
 
 describe("StaplesManager", () => {
-  it("creates a staple payload and clears the form", async () => {
+  it("opens the create sheet and creates a staple", async () => {
     const user = userEvent.setup();
     const props = renderStaplesManager({ staples: [] });
 
-    await user.type(screen.getByLabelText(/staple name/i), "  Milk  ");
-    await user.type(screen.getByLabelText(/^quantity$/i), "  2L  ");
-    await user.clear(screen.getByLabelText(/interval days/i));
-    await user.type(screen.getByLabelText(/interval days/i), "7");
     await user.click(screen.getByRole("button", { name: /add staple/i }));
+    await user.type(screen.getByLabelText(/name/i), "  Milk  ");
+    await user.type(screen.getByLabelText(/quantity/i), "  2L  ");
+    await user.click(screen.getByRole("button", { name: /save staple/i }));
 
     await waitFor(() => {
       expect(props.onCreate).toHaveBeenCalledWith({
@@ -52,24 +51,25 @@ describe("StaplesManager", () => {
         interval_days: 7,
       });
     });
-    expect(screen.getByLabelText(/staple name/i)).toHaveValue("");
   });
 
-  it("edits and deletes existing staples", async () => {
+  it("uses the stepper while editing and only shows delete in edit mode", async () => {
     const user = userEvent.setup();
     const props = renderStaplesManager();
 
     const stapleItem = screen.getByText("Coffee").closest("li");
     expect(stapleItem).not.toBeNull();
+    expect(screen.queryByRole("button", { name: /delete staple/i })).not.toBeInTheDocument();
 
-    await user.click(within(stapleItem as HTMLElement).getByRole("button", { name: /edit/i }));
-    await user.clear(screen.getByLabelText(/name for coffee/i));
-    await user.type(screen.getByLabelText(/name for coffee/i), "Espresso beans");
-    await user.clear(screen.getByLabelText(/quantity for coffee/i));
-    await user.type(screen.getByLabelText(/quantity for coffee/i), "2 bags");
-    await user.clear(screen.getByLabelText(/interval days for coffee/i));
-    await user.type(screen.getByLabelText(/interval days for coffee/i), "21");
-    await user.click(screen.getByRole("button", { name: /save/i }));
+    await user.click(within(stapleItem as HTMLElement).getByRole("button", { name: /actions for coffee/i }));
+    await user.click(screen.getByRole("button", { name: /^edit$/i }));
+    expect(screen.getByRole("button", { name: /delete staple/i })).toBeInTheDocument();
+    await user.clear(screen.getByLabelText(/name/i));
+    await user.type(screen.getByLabelText(/name/i), "Espresso beans");
+    await user.clear(screen.getByLabelText(/quantity/i));
+    await user.type(screen.getByLabelText(/quantity/i), "2 bags");
+    await user.click(screen.getByRole("button", { name: /increase interval/i }));
+    await user.click(screen.getByRole("button", { name: /save staple/i }));
 
     await waitFor(() => {
       expect(props.onUpdate).toHaveBeenCalledWith("coffee", {
@@ -78,8 +78,16 @@ describe("StaplesManager", () => {
         interval_days: 21,
       });
     });
+  });
 
-    await user.click(screen.getByRole("button", { name: /delete/i }));
+  it("deletes a staple from the edit sheet", async () => {
+    const user = userEvent.setup();
+    const props = renderStaplesManager();
+
+    await user.click(screen.getByRole("button", { name: /actions for coffee/i }));
+    await user.click(screen.getByRole("button", { name: /^edit$/i }));
+
+    await user.click(screen.getByRole("button", { name: /delete staple/i }));
 
     await waitFor(() => {
       expect(props.onDelete).toHaveBeenCalledWith("coffee");

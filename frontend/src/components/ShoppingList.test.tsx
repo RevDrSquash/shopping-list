@@ -1,4 +1,4 @@
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import type { ShoppingListItem } from "@/lib/api";
@@ -28,7 +28,7 @@ const items: ShoppingListItem[] = [
 ];
 
 describe("ShoppingList", () => {
-  it("renders needs_review and confirmed items in separate sections", () => {
+  it("renders needs_review and confirmed items in one list", () => {
     render(
       <ShoppingList
         items={items}
@@ -39,15 +39,14 @@ describe("ShoppingList", () => {
       />,
     );
 
-    const reviewSection = screen.getByRole("region", { name: /needs review/i });
-    const confirmedSection = screen.getByRole("region", { name: /confirmed/i });
+    const list = screen.getByRole("list", { name: /shopping items/i });
 
-    expect(within(reviewSection).getByText("Milk")).toBeInTheDocument();
-    expect(within(reviewSection).queryByText("Bananas")).not.toBeInTheDocument();
-    expect(within(confirmedSection).getByText("Bananas")).toBeInTheDocument();
+    expect(within(list).getByText("Milk")).toBeInTheDocument();
+    expect(within(list).getByText("Bananas")).toBeInTheDocument();
+    expect(screen.getByText(/tap to confirm/i)).toBeInTheDocument();
   });
 
-  it("calls the expected actions for confirm, skip, and purchase", async () => {
+  it("calls confirm from a needs-review row and purchase from the checkbox", async () => {
     const user = userEvent.setup();
     const onConfirm = vi.fn().mockResolvedValue(undefined);
     const onSkip = vi.fn().mockResolvedValue(undefined);
@@ -63,14 +62,37 @@ describe("ShoppingList", () => {
       />,
     );
 
-    await user.click(screen.getByRole("button", { name: /confirm/i }));
-    await user.click(screen.getByRole("button", { name: /skip/i }));
-    await user.click(screen.getByRole("button", { name: /purchased/i }));
+    await user.click(screen.getAllByRole("button", { name: /milk/i })[0]);
+    await user.click(screen.getByRole("button", { name: /mark bananas purchased/i }));
 
     await waitFor(() => {
       expect(onConfirm).toHaveBeenCalledWith("review-item");
-      expect(onSkip).toHaveBeenCalledWith("review-item");
       expect(onPurchase).toHaveBeenCalledWith("confirmed-item");
+    });
+    expect(onSkip).not.toHaveBeenCalled();
+  });
+
+  it("calls remove when a row is swiped left", async () => {
+    const onSkip = vi.fn().mockResolvedValue(undefined);
+
+    render(
+      <ShoppingList
+        items={items}
+        pendingItemId={null}
+        onConfirm={vi.fn()}
+        onSkip={onSkip}
+        onPurchase={vi.fn()}
+      />,
+    );
+
+    const row = screen.getByText("Milk").closest("li");
+    expect(row).not.toBeNull();
+
+    fireEvent.pointerDown(row as HTMLElement, { clientX: 120 });
+    fireEvent.pointerUp(row as HTMLElement, { clientX: 30 });
+
+    await waitFor(() => {
+      expect(onSkip).toHaveBeenCalledWith("review-item");
     });
   });
 });

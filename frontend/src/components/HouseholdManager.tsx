@@ -2,24 +2,22 @@
 
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import {
-  acceptInvitation,
   cancelInvitation,
-  declineInvitation,
   inviteUser,
   leaveHousehold,
-  listIncomingInvitations,
   listOutgoingInvitations,
   type CurrentUser,
   type Invitation,
 } from "@/lib/api";
+import { TopAppBar } from "@/components/layout/TopAppBar";
 
 type HouseholdManagerProps = {
   currentUser: CurrentUser;
   onMembershipChanged: () => Promise<void>;
+  onSignOut?: () => Promise<void>;
 };
 
-export function HouseholdManager({ currentUser, onMembershipChanged }: HouseholdManagerProps) {
-  const [incomingInvitations, setIncomingInvitations] = useState<Invitation[]>([]);
+export function HouseholdManager({ currentUser, onMembershipChanged, onSignOut }: HouseholdManagerProps) {
   const [outgoingInvitations, setOutgoingInvitations] = useState<Invitation[]>([]);
   const [email, setEmail] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -34,8 +32,7 @@ export function HouseholdManager({ currentUser, onMembershipChanged }: Household
     setError(null);
     setIsLoadingInvitations(true);
     try {
-      const [incoming, outgoing] = await Promise.all([listIncomingInvitations(), listOutgoingInvitations()]);
-      setIncomingInvitations(incoming);
+      const outgoing = await listOutgoingInvitations();
       setOutgoingInvitations(outgoing);
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : "Unable to load household invitations");
@@ -85,31 +82,6 @@ export function HouseholdManager({ currentUser, onMembershipChanged }: Household
     }
   }
 
-  async function handleAccept(invitationId: string) {
-    await handleMembershipChange(invitationId, acceptInvitation, "Unable to accept invitation");
-  }
-
-  async function handleDecline(invitationId: string) {
-    await handleMembershipChange(invitationId, declineInvitation, "Unable to decline invitation");
-  }
-
-  async function handleMembershipChange(
-    invitationId: string,
-    mutation: (invitationId: string) => Promise<void>,
-    fallbackMessage: string,
-  ) {
-    setError(null);
-    setPendingActionId(invitationId);
-    try {
-      await mutation(invitationId);
-      await onMembershipChanged();
-    } catch (membershipError) {
-      setError(membershipError instanceof Error ? membershipError.message : fallbackMessage);
-    } finally {
-      setPendingActionId(null);
-    }
-  }
-
   async function handleLeave() {
     setError(null);
     if (isSoleMember) {
@@ -133,118 +105,167 @@ export function HouseholdManager({ currentUser, onMembershipChanged }: Household
   }
 
   return (
-    <section className="card household-card" aria-labelledby="household-management-title">
-      <div className="section-header">
-        <div>
-          <p className="eyebrow">Household</p>
-          <h2 id="household-management-title">Household management</h2>
-          <p className="muted">Invite people to this shopping list or move back to your own household.</p>
-        </div>
-        <span className="pill">{currentUser.household_member_count}</span>
-      </div>
-
-      {isLoadingInvitations ? <p className="empty-state">Loading invitations...</p> : null}
-      {error ? <p className="error">{error}</p> : null}
-
-      {!isLoadingInvitations && incomingInvitations.length > 0 ? (
-        <section className="household-section" aria-labelledby="incoming-invitations-title">
-          <h3 id="incoming-invitations-title">Pending invitations to you</h3>
-          <ul className="item-list">
-            {incomingInvitations.map((invitation) => (
-              <li className="shopping-item" key={invitation.id}>
-                <InvitationDetails invitation={invitation} />
-                <div className="item-actions">
-                  <button
-                    type="button"
-                    className="secondary"
-                    disabled={pendingActionId === invitation.id}
-                    onClick={() => void handleAccept(invitation.id)}
-                  >
-                    Accept
-                  </button>
-                  <button
-                    type="button"
-                    className="ghost"
-                    disabled={pendingActionId === invitation.id}
-                    onClick={() => void handleDecline(invitation.id)}
-                  >
-                    Decline
-                  </button>
-                </div>
-              </li>
-            ))}
-          </ul>
-        </section>
-      ) : null}
-
-      <section className="household-section" aria-labelledby="invite-someone-title">
-        <h3 id="invite-someone-title">Invite someone</h3>
-        <form className="invite-form" onSubmit={handleInvite}>
-          <label>
-            <span>Email</span>
-            <input
-              type="email"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              placeholder="friend@example.com"
-              required
-            />
-          </label>
-          <button type="submit" disabled={isInviting}>
-            {isInviting ? "Sending..." : "Send invite"}
+    <>
+      <TopAppBar
+        title="Household"
+        leading={
+          <span className="material-symbols-outlined text-on-surface-variant" aria-hidden="true">
+            arrow_back
+          </span>
+        }
+        trailing={
+          <button
+            type="button"
+            className="grid min-h-10 w-10 place-items-center rounded-full bg-surface-container-low p-0 text-on-surface-variant"
+            aria-label="Sign out"
+            onClick={() => void onSignOut?.()}
+          >
+            <span className="material-symbols-outlined" aria-hidden="true">
+              account_circle
+            </span>
           </button>
-        </form>
+        }
+      />
 
-        {outgoingInvitations.length === 0 ? (
-          <p className="empty-state">No outgoing invitations right now.</p>
-        ) : (
-          <ul className="item-list" aria-label="Outgoing invitations">
-            {outgoingInvitations.map((invitation) => (
-              <li className="shopping-item" key={invitation.id}>
-                <InvitationDetails invitation={invitation} />
-                <div className="item-actions">
-                  <button
-                    type="button"
-                    className="ghost"
-                    disabled={pendingActionId === invitation.id}
-                    onClick={() => void handleCancel(invitation.id)}
+      <section className="grid gap-xl" aria-labelledby="household-management-title">
+        <h2 id="household-management-title" className="sr-only">
+          Household management
+        </h2>
+
+        {error ? <p className="rounded-xl bg-error-container p-sm text-label-md text-error">{error}</p> : null}
+
+        <section aria-labelledby="members-title">
+          <div className="mb-md flex items-center justify-between">
+            <h3 id="members-title" className="text-headline-md">
+              Members
+            </h3>
+            <span className="rounded-full bg-primary-fixed px-sm py-xs text-label-sm text-primary">
+              {currentUser.household_member_count}
+            </span>
+          </div>
+          <div className="grid gap-sm">
+            <MemberCard email={currentUser.email} isCurrentUser />
+            {currentUser.household_member_count > 1 ? (
+              <div className="rounded-xl border border-dashed border-outline-variant p-md text-label-md text-on-surface-variant">
+                {currentUser.household_member_count - 1} other{" "}
+                {currentUser.household_member_count - 1 === 1 ? "member" : "members"} in this household
+              </div>
+            ) : null}
+          </div>
+
+          {!isLoadingInvitations && outgoingInvitations.length > 0 ? (
+            <section className="mt-lg" aria-labelledby="pending-invites-title">
+              <h4 id="pending-invites-title" className="mb-sm text-label-md text-on-surface-variant">
+                Pending invites
+              </h4>
+              <ul className="grid gap-sm" aria-label="Outgoing invitations">
+                {outgoingInvitations.map((invitation) => (
+                  <li
+                    className="flex items-center justify-between gap-md rounded-xl bg-surface-container-lowest p-md shadow-card"
+                    key={invitation.id}
                   >
-                    Cancel
-                  </button>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+                    <InvitationDetails invitation={invitation} />
+                    <button
+                      type="button"
+                      className="min-h-10 rounded-full bg-surface-container-low px-md text-label-md text-on-surface"
+                      disabled={pendingActionId === invitation.id}
+                      onClick={() => void handleCancel(invitation.id)}
+                    >
+                      Cancel
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ) : null}
+        </section>
 
-      <section className="household-section leave-household" aria-labelledby="leave-household-title">
-        <div>
-          <h3 id="leave-household-title">Leave household</h3>
-          <p className="muted">You will keep copies of the staples and shopping list in a new household.</p>
-        </div>
-        <button
-          type="button"
-          className="ghost"
-          disabled={isSoleMember || isLeaving}
-          title={isSoleMember ? "You are the only member" : undefined}
-          onClick={() => void handleLeave()}
-        >
-          {isLeaving ? "Leaving..." : "Leave household"}
-        </button>
+        <section aria-labelledby="invite-someone-title">
+          <h3 id="invite-someone-title" className="mb-md text-headline-md">
+            Invite by email
+          </h3>
+          <form className="rounded-xl bg-surface-container-lowest p-md shadow-card" onSubmit={handleInvite}>
+            <label className="grid gap-xs text-label-md text-on-surface-variant">
+              <span>Email</span>
+              <input
+                type="email"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                placeholder="friend@example.com"
+                required
+              />
+            </label>
+            <button
+              type="submit"
+              className="mt-md min-h-12 w-full rounded-full bg-primary px-md text-label-md text-white"
+              disabled={isInviting}
+            >
+              {isInviting ? "Sending..." : "Send invite"}
+            </button>
+            <p className="mt-sm text-label-sm text-on-surface-variant">
+              They can accept from their pending invitation screen.
+            </p>
+          </form>
+        </section>
+
+        <section aria-labelledby="leave-household-title">
+          <h3 id="leave-household-title" className="mb-md text-headline-md">
+            Leave household
+          </h3>
+          <div className="rounded-xl border border-error p-md">
+            <p className="mb-md text-body-md text-on-surface-variant">
+              You will keep copies of the staples and shopping list in a new household.
+            </p>
+            <button
+              type="button"
+              className="min-h-12 w-full rounded-full border border-error bg-transparent px-md text-label-md text-error"
+              disabled={isSoleMember || isLeaving}
+              title={isSoleMember ? "You are the only member" : undefined}
+              onClick={() => void handleLeave()}
+            >
+              {isLeaving ? "Leaving..." : "Leave this household"}
+            </button>
+          </div>
+        </section>
       </section>
-    </section>
+    </>
   );
+}
+
+function MemberCard({ email, isCurrentUser }: { email: string; isCurrentUser: boolean }) {
+  return (
+    <article className="flex items-center gap-md rounded-xl bg-surface-container-lowest p-md shadow-card">
+      <div className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-secondary-fixed text-label-md text-secondary">
+        {initialsFor(email)}
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-sm">
+          <h4 className="truncate text-body-md font-semibold">{email.split("@")[0]}</h4>
+          {isCurrentUser ? (
+            <span className="rounded-full bg-primary-fixed px-sm py-xs text-label-sm text-primary">You</span>
+          ) : null}
+        </div>
+        <p className="truncate text-label-md text-on-surface-variant">{email}</p>
+      </div>
+    </article>
+  );
+}
+
+function initialsFor(email: string): string {
+  return email
+    .split("@")[0]
+    .split(/[._-]/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? "")
+    .join("");
 }
 
 function InvitationDetails({ invitation }: { invitation: Invitation }) {
   return (
-    <div>
-      <div className="item-title-row">
-        <h3>{invitation.user_email}</h3>
-        <span className="tag">{invitation.status}</span>
-      </div>
-      <p className="meta">Household: {invitation.household_name}</p>
+    <div className="min-w-0">
+      <h4 className="truncate text-body-md font-semibold">{invitation.user_email}</h4>
+      <p className="text-label-sm text-on-surface-variant">Household: {invitation.household_name}</p>
     </div>
   );
 }

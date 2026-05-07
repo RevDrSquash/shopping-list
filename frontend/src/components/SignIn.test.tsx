@@ -23,6 +23,7 @@ describe("SignIn", () => {
 
     render(<SignIn config={baseConfig} onLogin={onLogin} />);
 
+    await user.click(screen.getByText(/development bypass/i));
     const emailInput = screen.getByLabelText(/email/i);
     await user.clear(emailInput);
     await user.type(emailInput, "test@example.com");
@@ -37,7 +38,7 @@ describe("SignIn", () => {
     render(<SignIn config={{ dev_login_enabled: false, google_oauth_enabled: true }} onLogin={vi.fn()} />);
 
     expect(screen.getByRole("link", { name: /sign in with google/i })).toBeInTheDocument();
-    expect(screen.queryByRole("heading", { name: /development bypass/i })).not.toBeInTheDocument();
+    expect(screen.queryByText(/development bypass/i)).not.toBeInTheDocument();
     expect(screen.queryByLabelText(/email/i)).not.toBeInTheDocument();
   });
 
@@ -47,6 +48,7 @@ describe("SignIn", () => {
 
     render(<SignIn config={baseConfig} onLogin={onLogin} />);
 
+    await user.click(screen.getByText(/development bypass/i));
     await user.click(screen.getByRole("button", { name: /^sign in$/i }));
 
     expect(await screen.findByText("Development login is disabled")).toBeInTheDocument();

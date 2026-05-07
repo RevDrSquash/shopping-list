@@ -129,6 +129,32 @@ describe("useHouseholdEvents", () => {
     expect(getByText("connecting:1")).toBeInTheDocument();
   });
 
+  it("does not reconnect when only the callback identity changes", () => {
+    const { rerender } = render(<TestSubscriber enabled onHouseholdChanged={vi.fn()} />);
+    const firstSource = MockEventSource.instances[0];
+
+    rerender(<TestSubscriber enabled onHouseholdChanged={vi.fn()} />);
+    rerender(<TestSubscriber enabled onHouseholdChanged={vi.fn()} />);
+
+    expect(MockEventSource.instances).toHaveLength(1);
+    expect(firstSource?.close).not.toHaveBeenCalled();
+  });
+
+  it("invokes the latest callback when the parent re-renders with a new one", () => {
+    const firstCallback = vi.fn();
+    const secondCallback = vi.fn();
+    const { rerender } = render(<TestSubscriber enabled onHouseholdChanged={firstCallback} />);
+
+    rerender(<TestSubscriber enabled onHouseholdChanged={secondCallback} />);
+
+    act(() => {
+      MockEventSource.instances[0]?.emit("household_changed");
+    });
+
+    expect(firstCallback).not.toHaveBeenCalled();
+    expect(secondCallback).toHaveBeenCalledTimes(1);
+  });
+
   it("removes the listener and closes the connection on cleanup", () => {
     const onHouseholdChanged = vi.fn();
     const { rerender, unmount } = render(<TestSubscriber enabled onHouseholdChanged={onHouseholdChanged} />);

@@ -6,12 +6,9 @@ import * as api from "@/lib/api";
 import { HouseholdManager } from "./HouseholdManager";
 
 vi.mock("@/lib/api", () => ({
-  listIncomingInvitations: vi.fn(),
   listOutgoingInvitations: vi.fn(),
   inviteUser: vi.fn(),
   cancelInvitation: vi.fn(),
-  acceptInvitation: vi.fn(),
-  declineInvitation: vi.fn(),
   leaveHousehold: vi.fn(),
 }));
 
@@ -20,16 +17,6 @@ const currentUser: CurrentUser = {
   email: "me@example.com",
   household_id: "my-household",
   household_member_count: 2,
-};
-
-const incomingInvitation: Invitation = {
-  id: "incoming-invite",
-  household_id: "roommates-household",
-  household_name: "Roommates",
-  user_id: "current-user",
-  user_email: "me@example.com",
-  status: "pending",
-  created_at: "2026-05-04T00:00:00Z",
 };
 
 const outgoingInvitation: Invitation = {
@@ -56,7 +43,6 @@ function renderHouseholdManager(overrides: Partial<React.ComponentProps<typeof H
 describe("HouseholdManager", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(api.listIncomingInvitations).mockResolvedValue([incomingInvitation]);
     vi.mocked(api.listOutgoingInvitations).mockResolvedValue([outgoingInvitation]);
     vi.mocked(api.inviteUser).mockResolvedValue({
       ...outgoingInvitation,
@@ -64,24 +50,17 @@ describe("HouseholdManager", () => {
       user_email: "new@example.com",
     });
     vi.mocked(api.cancelInvitation).mockResolvedValue(undefined);
-    vi.mocked(api.acceptInvitation).mockResolvedValue(undefined);
-    vi.mocked(api.declineInvitation).mockResolvedValue(undefined);
     vi.mocked(api.leaveHousehold).mockResolvedValue(undefined);
   });
 
-  it("renders pending invitations and accepts one", async () => {
-    const user = userEvent.setup();
-    const props = renderHouseholdManager();
+  it("renders members and pending outgoing invitations", async () => {
+    renderHouseholdManager();
 
-    const incomingSection = await screen.findByRole("heading", { name: /pending invitations to you/i });
-    expect(within(incomingSection.closest("section") as HTMLElement).getByText(/household: roommates/i)).toBeInTheDocument();
-
-    await user.click(screen.getByRole("button", { name: /accept/i }));
-
-    await waitFor(() => {
-      expect(api.acceptInvitation).toHaveBeenCalledWith("incoming-invite");
-      expect(props.onMembershipChanged).toHaveBeenCalled();
-    });
+    const membersSection = screen.getByRole("heading", { name: /members/i }).closest("section");
+    expect(membersSection).not.toBeNull();
+    expect(within(membersSection as HTMLElement).getByText("me@example.com")).toBeInTheDocument();
+    expect(within(membersSection as HTMLElement).getByText("You")).toBeInTheDocument();
+    expect(await screen.findByText("friend@example.com")).toBeInTheDocument();
   });
 
   it("submits the invite form and prepends the outgoing invite", async () => {
@@ -89,15 +68,15 @@ describe("HouseholdManager", () => {
     vi.mocked(api.listOutgoingInvitations).mockResolvedValue([]);
     renderHouseholdManager();
 
-    await screen.findByRole("heading", { name: /invite someone/i });
-    await user.type(screen.getByLabelText(/email/i), "  new@example.com  ");
+    await screen.findByRole("heading", { name: /invite by email/i });
+    await user.type(screen.getByPlaceholderText("friend@example.com"), "  new@example.com  ");
     await user.click(screen.getByRole("button", { name: /send invite/i }));
 
     await waitFor(() => {
       expect(api.inviteUser).toHaveBeenCalledWith("new@example.com");
     });
     expect(await screen.findByText("new@example.com")).toBeInTheDocument();
-    expect(screen.getByLabelText(/email/i)).toHaveValue("");
+    expect(screen.getByPlaceholderText("friend@example.com")).toHaveValue("");
   });
 
   it("disables leave when the current user is the sole member", async () => {
@@ -108,7 +87,7 @@ describe("HouseholdManager", () => {
       },
     });
 
-    const leaveButton = await screen.findByRole("button", { name: /leave household/i });
+    const leaveButton = await screen.findByRole("button", { name: /leave this household/i });
 
     expect(leaveButton).toBeDisabled();
     expect(leaveButton).toHaveAttribute("title", "You are the only member");
@@ -119,7 +98,7 @@ describe("HouseholdManager", () => {
     const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(true);
     const props = renderHouseholdManager();
 
-    await user.click(await screen.findByRole("button", { name: /leave household/i }));
+    await user.click(await screen.findByRole("button", { name: /leave this household/i }));
 
     await waitFor(() => {
       expect(confirmSpy).toHaveBeenCalledWith("Leave this household and create your own household?");

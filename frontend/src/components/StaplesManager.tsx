@@ -1,6 +1,8 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
+import { BottomSheet } from "@/components/layout/BottomSheet";
+import { Fab } from "@/components/layout/Fab";
 import type { PromotionResult, Staple, StaplePayload } from "@/lib/api";
 
 type StaplesManagerProps = {
@@ -16,13 +18,13 @@ type StaplesManagerProps = {
 type StapleDraft = {
   name: string;
   quantity: string;
-  intervalDays: string;
+  intervalDays: number;
 };
 
 const emptyDraft: StapleDraft = {
   name: "",
   quantity: "",
-  intervalDays: "7",
+  intervalDays: 7,
 };
 
 export function StaplesManager({
@@ -34,47 +36,24 @@ export function StaplesManager({
   onDelete,
   onPromoteAll,
 }: StaplesManagerProps) {
-  const [createDraft, setCreateDraft] = useState<StapleDraft>(emptyDraft);
-  const [editingStapleId, setEditingStapleId] = useState<string | null>(null);
-  const [editDraft, setEditDraft] = useState<StapleDraft>(emptyDraft);
+  const [sheetMode, setSheetMode] = useState<"create" | "edit" | null>(null);
+  const [selectedStaple, setSelectedStaple] = useState<Staple | null>(null);
+  const [actionStaple, setActionStaple] = useState<Staple | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [promotionMessage, setPromotionMessage] = useState<string | null>(null);
 
-  async function handleCreate(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  async function handleSave(payload: StaplePayload) {
     setError(null);
     setPromotionMessage(null);
-
-    const payload = buildPayload(createDraft);
-    if (!payload) {
-      setError("Staple name and interval are required");
-      return;
-    }
-
     try {
-      await onCreate(payload);
-      setCreateDraft(emptyDraft);
-    } catch (createError) {
-      setError(createError instanceof Error ? createError.message : "Unable to create staple");
-    }
-  }
-
-  async function handleUpdate(event: FormEvent<HTMLFormElement>, stapleId: string) {
-    event.preventDefault();
-    setError(null);
-    setPromotionMessage(null);
-
-    const payload = buildPayload(editDraft);
-    if (!payload) {
-      setError("Staple name and interval are required");
-      return;
-    }
-
-    try {
-      await onUpdate(stapleId, payload);
-      setEditingStapleId(null);
-    } catch (updateError) {
-      setError(updateError instanceof Error ? updateError.message : "Unable to update staple");
+      if (selectedStaple) {
+        await onUpdate(selectedStaple.id, payload);
+      } else {
+        await onCreate(payload);
+      }
+      closeSheet();
+    } catch (saveError) {
+      setError(saveError instanceof Error ? saveError.message : "Unable to save staple");
     }
   }
 
@@ -84,6 +63,8 @@ export function StaplesManager({
 
     try {
       await onDelete(stapleId);
+      closeSheet();
+      setActionStaple(null);
     } catch (deleteError) {
       setError(deleteError instanceof Error ? deleteError.message : "Unable to delete staple");
     }
@@ -107,153 +88,262 @@ export function StaplesManager({
     }
   }
 
-  function startEditing(staple: Staple) {
+  function openCreateSheet() {
     setError(null);
     setPromotionMessage(null);
-    setEditingStapleId(staple.id);
-    setEditDraft({
-      name: staple.name,
-      quantity: staple.quantity,
-      intervalDays: String(staple.interval_days),
-    });
+    setSelectedStaple(null);
+    setSheetMode("create");
+  }
+
+  function openEditSheet(staple: Staple) {
+    setError(null);
+    setPromotionMessage(null);
+    setSelectedStaple(staple);
+    setActionStaple(null);
+    setSheetMode("edit");
+  }
+
+  function closeSheet() {
+    setSheetMode(null);
+    setSelectedStaple(null);
   }
 
   return (
-    <section className="card staples-card" aria-labelledby="staples-title">
-      <div className="section-header">
-        <div>
-          <p className="eyebrow">Staples</p>
-          <h2 id="staples-title">Household staples</h2>
-          <p className="muted">Recurring items can be reviewed now or promoted automatically later.</p>
-        </div>
-        <span className="pill">{staples.length}</span>
+    <section aria-labelledby="staples-title">
+      <p className="mb-lg text-body-md italic text-on-surface-variant">Items added to your list automatically</p>
+      <div className="mb-md flex items-center justify-between">
+        <h2 id="staples-title" className="text-headline-md">
+          Household staples
+        </h2>
+        <span className="rounded-full bg-primary-fixed px-sm py-xs text-label-sm text-primary">{staples.length}</span>
       </div>
 
-      <form className="staple-form" onSubmit={handleCreate}>
-        <label>
-          <span>Staple name</span>
-          <input
-            value={createDraft.name}
-            onChange={(event) => setCreateDraft({ ...createDraft, name: event.target.value })}
-            placeholder="Coffee"
-            required
-          />
-        </label>
-        <label>
-          <span>Quantity</span>
-          <input
-            value={createDraft.quantity}
-            onChange={(event) => setCreateDraft({ ...createDraft, quantity: event.target.value })}
-            placeholder="1 bag"
-          />
-        </label>
-        <label>
-          <span>Interval days</span>
-          <input
-            type="number"
-            min="1"
-            value={createDraft.intervalDays}
-            onChange={(event) => setCreateDraft({ ...createDraft, intervalDays: event.target.value })}
-            required
-          />
-        </label>
-        <button type="submit">Add staple</button>
-      </form>
-
-      <div className="dev-action-row">
-        <button type="button" className="secondary" disabled={isPromoting || staples.length === 0} onClick={handlePromoteAll}>
-          {isPromoting ? "Adding staples..." : "Review all staples now"}
-        </button>
-        <p className="muted">Adds staples without active shopping-list items to Needs review.</p>
-      </div>
-
-      {error ? <p className="error">{error}</p> : null}
-      {promotionMessage ? <p className="success">{promotionMessage}</p> : null}
+      {error ? <p className="mb-md rounded-xl bg-error-container p-sm text-label-md text-error">{error}</p> : null}
+      {promotionMessage ? (
+        <p className="mb-md rounded-xl bg-primary-fixed p-sm text-label-md text-primary">{promotionMessage}</p>
+      ) : null}
 
       {staples.length === 0 ? (
-        <p className="empty-state">No staples yet. Add one above to start building your recurring list.</p>
+        <div className="rounded-xl bg-surface-container-lowest p-lg text-center shadow-card">
+          <p className="text-body-md text-on-surface-variant">No staples yet. Add one to start your recurring list.</p>
+        </div>
       ) : (
-        <ul className="staple-list">
+        <ul className="grid gap-md">
           {staples.map((staple) => (
-            <li className="staple-item" key={staple.id}>
-              {editingStapleId === staple.id ? (
-                <form className="staple-edit-form" onSubmit={(event) => handleUpdate(event, staple.id)}>
-                  <label>
-                    <span>Name</span>
-                    <input
-                      aria-label={`Name for ${staple.name}`}
-                      value={editDraft.name}
-                      onChange={(event) => setEditDraft({ ...editDraft, name: event.target.value })}
-                      required
-                    />
-                  </label>
-                  <label>
-                    <span>Quantity</span>
-                    <input
-                      aria-label={`Quantity for ${staple.name}`}
-                      value={editDraft.quantity}
-                      onChange={(event) => setEditDraft({ ...editDraft, quantity: event.target.value })}
-                    />
-                  </label>
-                  <label>
-                    <span>Interval days</span>
-                    <input
-                      aria-label={`Interval days for ${staple.name}`}
-                      type="number"
-                      min="1"
-                      value={editDraft.intervalDays}
-                      onChange={(event) => setEditDraft({ ...editDraft, intervalDays: event.target.value })}
-                      required
-                    />
-                  </label>
-                  <div className="item-actions">
-                    <button type="submit" disabled={pendingStapleId === staple.id}>
-                      Save
-                    </button>
-                    <button type="button" className="ghost" onClick={() => setEditingStapleId(null)}>
-                      Cancel
-                    </button>
-                  </div>
-                </form>
-              ) : (
-                <>
-                  <div>
-                    <div className="item-title-row">
-                      <h3>{staple.name}</h3>
-                      <span className="tag">Every {staple.interval_days} days</span>
-                    </div>
+            <li key={staple.id} className="rounded-xl bg-surface-container-lowest p-md shadow-card">
+              <div className="flex items-start justify-between gap-md">
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-sm">
+                    <h3 className="text-body-lg font-semibold">{staple.name}</h3>
                     {staple.quantity ? (
-                      <p className="quantity">{staple.quantity}</p>
-                    ) : (
-                      <p className="quantity muted">No quantity</p>
-                    )}
-                    <p className="meta">Next automatic review: {formatDate(staple.eligible_at)}</p>
+                      <span className="rounded-full bg-surface-container px-sm py-xs text-label-sm text-on-surface-variant">
+                        {staple.quantity}
+                      </span>
+                    ) : null}
                   </div>
-                  <div className="item-actions">
-                    <button type="button" className="secondary" onClick={() => startEditing(staple)}>
-                      Edit
-                    </button>
-                    <button
-                      type="button"
-                      className="ghost"
-                      disabled={pendingStapleId === staple.id}
-                      onClick={() => void handleDelete(staple.id)}
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </>
-              )}
+                  <span
+                    className={`mt-sm inline-flex rounded-full px-sm py-xs text-label-sm ${
+                      staple.interval_days <= 14
+                        ? "bg-primary-fixed text-primary"
+                        : "bg-surface-container-high text-on-surface-variant"
+                    }`}
+                  >
+                    every {staple.interval_days} days
+                  </span>
+                  <p className="mt-sm text-label-sm text-on-surface-variant">
+                    Next automatic review: {formatDate(staple.eligible_at)}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  className="grid min-h-10 w-10 place-items-center rounded-full bg-transparent p-0 text-on-surface-variant hover:bg-surface-container"
+                  aria-label={`Actions for ${staple.name}`}
+                  onClick={() => setActionStaple(staple)}
+                >
+                  <span className="material-symbols-outlined" aria-hidden="true">
+                    more_vert
+                  </span>
+                </button>
+              </div>
             </li>
           ))}
         </ul>
       )}
+
+      <section className="mt-xl rounded-xl bg-surface-container-low p-md" aria-label="Development tools">
+        <button
+          type="button"
+          className="min-h-12 w-full rounded-full bg-primary-fixed px-md text-label-md text-primary"
+          disabled={isPromoting || staples.length === 0}
+          onClick={handlePromoteAll}
+        >
+          {isPromoting ? "Adding staples..." : "Review all staples now"}
+        </button>
+        <p className="mt-sm text-label-sm text-on-surface-variant">
+          Adds staples without active shopping-list items to review for local development.
+        </p>
+      </section>
+
+      <Fab label="Add staple" onClick={openCreateSheet} />
+
+      <EditStapleSheet
+        open={sheetMode !== null}
+        staple={selectedStaple}
+        pending={selectedStaple ? pendingStapleId === selectedStaple.id : false}
+        onClose={closeSheet}
+        onSave={handleSave}
+        onDelete={selectedStaple ? () => handleDelete(selectedStaple.id) : undefined}
+      />
+
+      <BottomSheet open={actionStaple !== null} title="Staple actions" onClose={() => setActionStaple(null)}>
+        {actionStaple ? (
+          <div className="grid gap-sm">
+            <p className="text-body-md text-on-surface-variant">{actionStaple.name}</p>
+            <button
+              type="button"
+              className="min-h-12 rounded-full bg-primary px-md text-label-md text-white"
+              onClick={() => openEditSheet(actionStaple)}
+            >
+              Edit
+            </button>
+            <button
+              type="button"
+              className="min-h-12 rounded-full bg-transparent px-md text-label-md text-error"
+              disabled={pendingStapleId === actionStaple.id}
+              onClick={() => void handleDelete(actionStaple.id)}
+            >
+              Delete
+            </button>
+            <button
+              type="button"
+              className="min-h-12 rounded-full bg-surface-container-low px-md text-label-md text-on-surface"
+              onClick={() => setActionStaple(null)}
+            >
+              Cancel
+            </button>
+          </div>
+        ) : null}
+      </BottomSheet>
     </section>
   );
 }
 
+function EditStapleSheet({
+  open,
+  staple,
+  pending,
+  onClose,
+  onSave,
+  onDelete,
+}: {
+  open: boolean;
+  staple: Staple | null;
+  pending: boolean;
+  onClose: () => void;
+  onSave: (payload: StaplePayload) => Promise<void>;
+  onDelete?: () => Promise<void>;
+}) {
+  const [draft, setDraft] = useState<StapleDraft>(emptyDraft);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (open) {
+      setDraft(staple ? { name: staple.name, quantity: staple.quantity, intervalDays: staple.interval_days } : emptyDraft);
+      setError(null);
+    }
+  }, [open, staple]);
+
+  function updateInterval(delta: number) {
+    setDraft((currentDraft) => ({
+      ...currentDraft,
+      intervalDays: Math.max(1, currentDraft.intervalDays + delta),
+    }));
+  }
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setError(null);
+    const payload = buildPayload(draft);
+    if (!payload) {
+      setError("Name is required and interval must be at least 1 day.");
+      return;
+    }
+    await onSave(payload);
+  }
+
+  return (
+    <BottomSheet open={open} title={staple ? "Edit staple" : "Add staple"} onClose={onClose}>
+      <form className="grid gap-md" onSubmit={handleSubmit}>
+        <label className="grid gap-xs text-label-md text-on-surface-variant">
+          <span>Name (required)</span>
+          <input
+            value={draft.name}
+            onChange={(event) => setDraft({ ...draft, name: event.target.value })}
+            placeholder="Coffee"
+            required
+          />
+        </label>
+        <label className="grid gap-xs text-label-md text-on-surface-variant">
+          <span>Quantity (optional)</span>
+          <input
+            value={draft.quantity}
+            onChange={(event) => setDraft({ ...draft, quantity: event.target.value })}
+            placeholder="1 bag"
+          />
+        </label>
+        <div>
+          <p className="mb-sm text-label-md text-on-surface-variant">Interval</p>
+          <div className="grid grid-cols-[56px_1fr_56px] items-center gap-sm">
+            <button
+              type="button"
+              className="grid min-h-14 place-items-center rounded-full bg-surface-container text-on-surface"
+              aria-label="Decrease interval"
+              onClick={() => updateInterval(-7)}
+            >
+              -
+            </button>
+            <output className="rounded-full bg-primary-fixed px-md py-md text-center text-label-md text-primary">
+              {draft.intervalDays} days
+            </output>
+            <button
+              type="button"
+              className="grid min-h-14 place-items-center rounded-full bg-surface-container text-on-surface"
+              aria-label="Increase interval"
+              onClick={() => updateInterval(7)}
+            >
+              +
+            </button>
+          </div>
+          <p className="mt-sm text-label-sm text-on-surface-variant">Staples can recur every day or less often.</p>
+        </div>
+        <button type="submit" className="min-h-14 rounded-full bg-primary px-md text-label-md text-white" disabled={pending}>
+          {pending ? "Saving..." : "Save staple"}
+        </button>
+      </form>
+      {onDelete ? (
+        <button
+          type="button"
+          className="mt-sm min-h-12 w-full rounded-full bg-transparent px-md text-label-md text-error"
+          disabled={pending}
+          onClick={() => void onDelete()}
+        >
+          Delete staple
+        </button>
+      ) : null}
+      <button
+        type="button"
+        className="mt-xs min-h-12 w-full rounded-full bg-transparent px-md text-label-md text-on-surface-variant"
+        onClick={onClose}
+      >
+        Cancel
+      </button>
+      {error ? <p className="mt-md rounded-xl bg-error-container p-sm text-label-md text-error">{error}</p> : null}
+    </BottomSheet>
+  );
+}
+
 function buildPayload(draft: StapleDraft): StaplePayload | null {
-  const intervalDays = Number.parseInt(draft.intervalDays, 10);
+  const intervalDays = draft.intervalDays;
   const name = draft.name.trim();
   if (!name || !Number.isFinite(intervalDays) || intervalDays <= 0) {
     return null;
