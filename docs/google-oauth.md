@@ -13,7 +13,7 @@ Use a separate OAuth Client for development and production so the dev client's s
 3. Open **APIs & Services → Credentials** and create an **OAuth 2.0 Client ID** of type **Web application** named `Household Shopping List (dev)`:
    - Authorized JavaScript origins: `http://localhost:8080`
    - Authorized redirect URIs: `http://localhost:8080/api/auth/google/callback`
-4. Copy the generated Client ID and Client Secret into your local `backend/.env`:
+4. Copy the generated Client ID and Client Secret into your local root `.env`:
 
 ```sh
 GOOGLE_OAUTH_CLIENT_ID=...

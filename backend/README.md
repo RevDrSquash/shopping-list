@@ -16,18 +16,20 @@ Install dependencies from this directory:
 poetry install
 ```
 
-Copy the example environment if you want a local `.env` file:
+Copy the root example environment if you want a local `.env` file:
 
 ```sh
-cp .env.example .env
+cp ../.env.example ../.env
 ```
 
-The default local URLs are:
+The root `.env` is the single local environment file for Docker Compose and the backend. The example derives the backend database URLs from the Postgres components:
 
 ```sh
-DATABASE_URL=postgresql+psycopg://shopping_list:change-me-locally@localhost:5432/shopping_list
-TEST_DATABASE_URL=postgresql+psycopg://shopping_list:change-me-locally@localhost:5432/shopping_list_test
+DATABASE_URL=postgresql+psycopg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:5432/${POSTGRES_DB}
+TEST_DATABASE_URL=postgresql+psycopg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:5432/${POSTGRES_TEST_DB}
 ```
+
+If you already have values in `backend/.env`, migrate them into the root `.env` and delete the backend copy. Keep `POSTGRES_TEST_DB=shopping_list_test` unless you also update `docker/postgres/init-test-db.sql`, which creates the test database.
 
 ## Database
 
@@ -79,4 +81,4 @@ With Docker Postgres running:
 ENV=test poetry run pytest
 ```
 
-The tests reset and migrate the `shopping_list_test` database.
+The tests reset and migrate the `shopping_list_test` database. They require the root `.env`, or exported `DATABASE_URL` and `TEST_DATABASE_URL` environment variables, so the backend knows how to reach Postgres.

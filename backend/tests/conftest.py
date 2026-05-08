@@ -9,19 +9,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, delete, text
 from sqlalchemy.orm import Session
 
-POSTGRES_USER = os.environ.get("POSTGRES_USER", "shopping_list")
-POSTGRES_PASSWORD = os.environ.get("POSTGRES_PASSWORD", "shopping_list")
-POSTGRES_DB = os.environ.get("POSTGRES_DB", "shopping_list")
-
 os.environ.setdefault("ENV", "test")
-os.environ.setdefault(
-    "DATABASE_URL",
-    f"postgresql+psycopg://{POSTGRES_USER}:{POSTGRES_PASSWORD}@localhost:5432/{POSTGRES_DB}",
-)
-os.environ.setdefault(
-    "TEST_DATABASE_URL",
-    f"postgresql+psycopg://{POSTGRES_USER}:{POSTGRES_PASSWORD}@localhost:5432/{POSTGRES_DB}_test",
-)
 os.environ.setdefault("SESSION_SECRET", "test-session-secret")
 
 from app.core.config import get_settings  # noqa: E402
