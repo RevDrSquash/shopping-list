@@ -7,8 +7,10 @@ server {
   listen ${PORT};
 
   # Re-resolve upstream hostnames at runtime so we don't get stuck on stale IPs
-  # after Railway reschedules the backend or frontend container.
-  resolver ${NGINX_RESOLVER} valid=10s ipv6=on;
+  # after Railway reschedules the backend or frontend container. NGINX_LOCAL_RESOLVERS
+  # is exported by the upstream nginx image's 15-local-resolvers.envsh entrypoint
+  # script, which reads /etc/resolv.conf and bracket-wraps IPv6 addresses.
+  resolver ${NGINX_LOCAL_RESOLVERS} valid=10s ipv6=on;
 
   proxy_http_version 1.1;
   proxy_buffering off;

@@ -1,6 +1,0 @@
-#!/bin/sh
-# Extract the system nameservers from /etc/resolv.conf so nginx's `resolver`
-# directive can re-resolve internal Railway hostnames at request time.
-NGINX_RESOLVER=$(awk 'BEGIN{ORS=" "} /^nameserver/ {print $2}' /etc/resolv.conf)
-NGINX_RESOLVER=${NGINX_RESOLVER:-127.0.0.11}
-export NGINX_RESOLVER
