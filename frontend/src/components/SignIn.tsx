@@ -37,7 +37,7 @@ export function SignIn({ config, onLogin }: SignInProps) {
       <h1 id="sign-in-title" className="text-headline-xl">
         Household
       </h1>
-      <p className="mx-auto mt-sm max-w-xs text-body-md text-on-surface-variant">
+      <p className="mx-auto mt-sm max-w-[20rem] text-body-md text-on-surface-variant">
         Share groceries, staples, and quick decisions with everyone at home.
       </p>
 

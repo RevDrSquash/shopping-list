@@ -14,10 +14,9 @@ import { TopAppBar } from "@/components/layout/TopAppBar";
 type HouseholdManagerProps = {
   currentUser: CurrentUser;
   onMembershipChanged: () => Promise<void>;
-  onSignOut?: () => Promise<void>;
 };
 
-export function HouseholdManager({ currentUser, onMembershipChanged, onSignOut }: HouseholdManagerProps) {
+export function HouseholdManager({ currentUser, onMembershipChanged }: HouseholdManagerProps) {
   const [outgoingInvitations, setOutgoingInvitations] = useState<Invitation[]>([]);
   const [email, setEmail] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -106,26 +105,7 @@ export function HouseholdManager({ currentUser, onMembershipChanged, onSignOut }
 
   return (
     <>
-      <TopAppBar
-        title="Household"
-        leading={
-          <span className="material-symbols-outlined text-on-surface-variant" aria-hidden="true">
-            arrow_back
-          </span>
-        }
-        trailing={
-          <button
-            type="button"
-            className="grid min-h-10 w-10 place-items-center rounded-full bg-surface-container-low p-0 text-on-surface-variant"
-            aria-label="Sign out"
-            onClick={() => void onSignOut?.()}
-          >
-            <span className="material-symbols-outlined" aria-hidden="true">
-              account_circle
-            </span>
-          </button>
-        }
-      />
+      <TopAppBar title="Household" />
 
       <section className="grid gap-xl" aria-labelledby="household-management-title">
         <h2 id="household-management-title" className="sr-only">

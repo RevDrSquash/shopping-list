@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { AccountMenu } from "@/components/layout/AccountMenu";
 
 type TopAppBarProps = {
   title: string;
@@ -9,7 +10,7 @@ type TopAppBarProps = {
   trailing?: ReactNode;
 };
 
-export function TopAppBar({ title, subtitle, leading, trailing }: TopAppBarProps) {
+export function TopAppBar({ title, subtitle, leading, trailing = <AccountMenu /> }: TopAppBarProps) {
   return (
     <header className="sticky top-0 z-20 -mx-container-padding mb-lg bg-surface/95 px-container-padding py-md backdrop-blur">
       <div className="mx-auto flex w-full max-w-page-default items-center gap-md">

@@ -110,7 +110,6 @@ export function StaplesManager({
 
   return (
     <section aria-labelledby="staples-title">
-      <p className="mb-lg text-body-md italic text-on-surface-variant">Items added to your list automatically</p>
       <div className="mb-md flex items-center justify-between">
         <h2 id="staples-title" className="text-headline-md">
           Household staples

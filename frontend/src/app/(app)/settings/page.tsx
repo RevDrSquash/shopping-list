@@ -4,7 +4,7 @@ import { useAppShell } from "@/components/AppShell";
 import { HouseholdManager } from "@/components/HouseholdManager";
 
 export default function SettingsPage() {
-  const { user, reloadSession, signOut } = useAppShell();
+  const { user, reloadSession } = useAppShell();
 
-  return <HouseholdManager currentUser={user} onMembershipChanged={reloadSession} onSignOut={signOut} />;
+  return <HouseholdManager currentUser={user} onMembershipChanged={reloadSession} />;
 }

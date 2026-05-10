@@ -246,3 +246,7 @@ export function useAppShell() {
   }
   return context;
 }
+
+export function useAppShellOptional() {
+  return useContext(AppShellContext);
+}

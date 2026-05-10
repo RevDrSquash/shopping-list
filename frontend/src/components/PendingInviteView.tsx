@@ -103,7 +103,7 @@ export function PendingInviteView() {
         <h1 id="invite-title" className="mt-sm text-headline-xl">
           You have been invited
         </h1>
-        <p className="mx-auto mt-md max-w-xs text-body-md text-on-surface-variant">
+        <p className="mx-auto mt-md max-w-[20rem] text-body-md text-on-surface-variant">
           {invitation.user_email} invited you to join {invitation.household_name}.
         </p>
 
