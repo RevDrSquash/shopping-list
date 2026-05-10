@@ -213,7 +213,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   if (isLoading) {
     return (
       <PageMain variant="centered">
-        <section className="w-full max-w-page-narrow rounded-xl bg-surface-container-lowest p-lg text-center shadow-card">
+        <section className="w-full max-w-page-narrow rounded-xl bg-surface-container-lowest p-6 text-center shadow-card">
           <p className="text-body-md text-on-surface-variant">Loading your household...</p>
         </section>
       </PageMain>
@@ -228,7 +228,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     <AppShellContext.Provider value={value}>
       <PageMain variant="app">
         {error ? (
-          <p className="mb-md rounded-xl bg-error-container px-md py-sm text-label-md text-error" role="alert">
+          <p className="mb-4 rounded-xl bg-error-container px-4 py-2 text-label-md text-error" role="alert">
             {error}
           </p>
         ) : null}

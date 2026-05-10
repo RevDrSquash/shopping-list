@@ -29,7 +29,7 @@ export function SignIn({ config, onLogin }: SignInProps) {
 
   return (
     <section className="w-full max-w-page-narrow text-center" aria-labelledby="sign-in-title">
-      <div className="mx-auto mb-md grid h-20 w-20 place-items-center rounded-full bg-primary-fixed text-primary">
+      <div className="mx-auto mb-4 grid h-20 w-20 place-items-center rounded-full bg-primary-fixed text-primary">
         <span className="material-symbols-outlined text-[42px]" aria-hidden="true">
           home
         </span>
@@ -37,17 +37,17 @@ export function SignIn({ config, onLogin }: SignInProps) {
       <h1 id="sign-in-title" className="text-headline-xl">
         Household
       </h1>
-      <p className="mx-auto mt-sm max-w-[20rem] text-body-md text-on-surface-variant">
+      <p className="mx-auto mt-2 max-w-xs text-body-md text-on-surface-variant">
         Share groceries, staples, and quick decisions with everyone at home.
       </p>
 
-      <div className="mt-xl rounded-[2rem] bg-surface-container-lowest p-lg text-left shadow-card">
+      <div className="mt-8 rounded-[2rem] bg-surface-container-lowest p-6 text-left shadow-card">
         <h2 className="text-headline-md">Welcome back</h2>
-        <p className="mt-xs text-label-md text-on-surface-variant">Choose a sign-in method to continue.</p>
+        <p className="mt-1 text-label-md text-on-surface-variant">Choose a sign-in method to continue.</p>
 
         {config.google_oauth_enabled ? (
           <a
-            className="mt-lg flex min-h-14 w-full items-center justify-center gap-sm rounded-full border border-outline-variant bg-white px-md text-label-md text-on-surface transition hover:bg-surface-container-low"
+            className="mt-6 flex min-h-14 w-full items-center justify-center gap-2 rounded-full border border-outline-variant bg-white px-4 text-label-md text-on-surface transition hover:bg-surface-container-low"
             href="/api/auth/google/login"
           >
             <GoogleIcon />
@@ -56,10 +56,10 @@ export function SignIn({ config, onLogin }: SignInProps) {
         ) : null}
 
         {config.dev_login_enabled ? (
-          <details className="mt-lg rounded-xl bg-surface-container-low p-md">
+          <details className="mt-6 rounded-xl bg-surface-container-low p-4">
             <summary className="cursor-pointer text-label-md text-on-surface-variant">Development bypass</summary>
-            <form className="mt-md grid gap-md" onSubmit={handleSubmit}>
-              <label className="grid gap-xs text-label-md text-on-surface-variant" htmlFor="email">
+            <form className="mt-4 grid gap-4" onSubmit={handleSubmit}>
+              <label className="grid gap-1 text-label-md text-on-surface-variant" htmlFor="email">
                 Email
               </label>
               <input
@@ -73,7 +73,7 @@ export function SignIn({ config, onLogin }: SignInProps) {
               />
               <button
                 type="submit"
-                className="min-h-12 rounded-full bg-primary px-md text-label-md text-white"
+                className="min-h-12 rounded-full bg-primary px-4 text-label-md text-white"
                 disabled={isSubmitting}
               >
                 {isSubmitting ? "Signing in..." : "Sign in"}
@@ -83,20 +83,20 @@ export function SignIn({ config, onLogin }: SignInProps) {
         ) : null}
 
         {!config.google_oauth_enabled && !config.dev_login_enabled ? (
-          <p className="mt-lg text-body-md text-on-surface-variant">
+          <p className="mt-6 text-body-md text-on-surface-variant">
             No sign-in methods are enabled. Ask an administrator to configure authentication.
           </p>
         ) : null}
 
-        {error ? <p className="mt-md rounded-xl bg-error-container p-sm text-label-md text-error">{error}</p> : null}
+        {error ? <p className="mt-4 rounded-xl bg-error-container p-2 text-label-md text-error">{error}</p> : null}
       </div>
 
-      <footer className="mt-xl text-label-sm text-on-surface-variant">
+      <footer className="mt-8 text-label-sm text-on-surface-variant">
         <p>
           By continuing, you agree to the <a className="underline" href="/terms">Terms</a> and{" "}
           <a className="underline" href="/privacy">Privacy Policy</a>.
         </p>
-        <p className="mt-sm">&copy; 2026 Household</p>
+        <p className="mt-2">&copy; 2026 Household</p>
       </footer>
     </section>
   );

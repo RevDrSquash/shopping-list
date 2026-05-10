@@ -14,10 +14,10 @@ export function BottomNav() {
 
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-30 pb-[max(12px,env(safe-area-inset-bottom))] pt-sm"
+      className="fixed inset-x-0 bottom-0 z-30 pb-[max(12px,env(safe-area-inset-bottom))] pt-2"
       aria-label="Primary"
     >
-      <div className="mx-auto grid w-full max-w-page-default grid-cols-3 gap-sm border-t border-outline-variant bg-surface-container-lowest/95 px-md py-sm shadow-card backdrop-blur sm:rounded-full sm:border">
+      <div className="mx-auto grid w-full max-w-page-default grid-cols-3 gap-2 border-t border-outline-variant bg-surface-container-lowest/95 px-4 py-2 shadow-card backdrop-blur sm:rounded-full sm:border">
         {tabs.map((tab) => {
           const isActive = pathname === tab.href || pathname.startsWith(`${tab.href}/`);
           return (
@@ -25,7 +25,7 @@ export function BottomNav() {
               key={tab.href}
               href={tab.href}
               aria-current={isActive ? "page" : undefined}
-              className={`flex items-center justify-center gap-xs rounded-full px-sm py-sm text-label-sm transition ${
+              className={`flex items-center justify-center gap-1 rounded-full px-2 py-2 text-label-sm transition ${
                 isActive
                   ? "bg-primary-container text-on-primary-container"
                   : "text-on-surface-variant hover:bg-surface-container"

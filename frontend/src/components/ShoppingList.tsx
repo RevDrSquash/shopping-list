@@ -23,22 +23,22 @@ export function ShoppingList({
 
   return (
     <section aria-labelledby="shopping-list-title">
-      <div className="mb-md flex items-end justify-between gap-md">
+      <div className="mb-4 flex items-end justify-between gap-4">
         <div>
           <p className="text-label-sm uppercase tracking-[0.12em] text-primary">Today</p>
           <h2 id="shopping-list-title" className="text-headline-md">
             Shopping list
           </h2>
         </div>
-        <span className="rounded-full bg-primary-fixed px-sm py-xs text-label-sm text-primary">{items.length}</span>
+        <span className="rounded-full bg-primary-fixed px-2 py-1 text-label-sm text-primary">{items.length}</span>
       </div>
 
       {items.length === 0 ? (
-        <div className="rounded-xl bg-surface-container-lowest p-lg text-center shadow-card">
+        <div className="rounded-xl bg-surface-container-lowest p-6 text-center shadow-card">
           <p className="text-body-md text-on-surface-variant">Your list is clear. Add an item when something comes up.</p>
         </div>
       ) : (
-        <ul className="grid gap-md" aria-label="Shopping items">
+        <ul className="grid gap-4" aria-label="Shopping items">
           {items.map((item) => (
             <ShoppingListRow
               key={item.id}
@@ -58,11 +58,11 @@ export function ShoppingList({
 
       <BottomSheet open={actionItem !== null} title="Item actions" onClose={() => setActionItem(null)}>
         {actionItem ? (
-          <div className="grid gap-sm">
+          <div className="grid gap-2">
             <p className="text-body-md text-on-surface-variant">Remove {actionItem.name} from this shopping list?</p>
             <button
               type="button"
-              className="min-h-12 rounded-full bg-error px-md text-label-md text-white"
+              className="min-h-12 rounded-full bg-error px-4 text-label-md text-white"
               disabled={pendingItemId === actionItem.id}
               onClick={() => void onSkip(actionItem.id).then(() => setActionItem(null))}
             >
@@ -70,7 +70,7 @@ export function ShoppingList({
             </button>
             <button
               type="button"
-              className="min-h-12 rounded-full bg-surface-container-low px-md text-label-md text-on-surface"
+              className="min-h-12 rounded-full bg-surface-container-low px-4 text-label-md text-on-surface"
               onClick={() => setActionItem(null)}
             >
               Cancel
@@ -147,7 +147,7 @@ function ShoppingListRow({
       <div className="absolute inset-y-0 right-0 flex w-28 items-center justify-center bg-error text-label-md text-white">
         Remove
       </div>
-      <div className={`relative flex items-center gap-md rounded-xl p-md ${rowClassName}`}>
+      <div className={`relative flex items-center gap-4 rounded-xl p-4 ${rowClassName}`}>
         <button
           type="button"
           className="min-h-0 flex-1 bg-transparent p-0 text-left text-on-surface hover:bg-transparent"
@@ -158,17 +158,17 @@ function ShoppingListRow({
             }
           }}
         >
-          <span className="flex flex-wrap items-center gap-sm">
+          <span className="flex flex-wrap items-center gap-2">
             <span className={`text-body-lg font-semibold ${isReview ? "text-on-surface-variant" : "text-on-surface"}`}>
               {item.name}
             </span>
             {item.quantity ? (
-              <span className="rounded-full bg-surface-container px-sm py-xs text-label-sm text-on-surface-variant">
+              <span className="rounded-full bg-surface-container px-2 py-1 text-label-sm text-on-surface-variant">
                 {item.quantity}
               </span>
             ) : null}
           </span>
-          <span className="mt-xs block text-label-sm text-on-surface-variant">
+          <span className="mt-1 block text-label-sm text-on-surface-variant">
             {item.staple_id ? "Staple" : "One-off"}
             {isReview ? " · tap to confirm" : ""}
           </span>

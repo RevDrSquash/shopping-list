@@ -110,38 +110,38 @@ export function StaplesManager({
 
   return (
     <section aria-labelledby="staples-title">
-      <div className="mb-md flex items-center justify-between">
+      <div className="mb-4 flex items-center justify-between">
         <h2 id="staples-title" className="text-headline-md">
           Household staples
         </h2>
-        <span className="rounded-full bg-primary-fixed px-sm py-xs text-label-sm text-primary">{staples.length}</span>
+        <span className="rounded-full bg-primary-fixed px-2 py-1 text-label-sm text-primary">{staples.length}</span>
       </div>
 
-      {error ? <p className="mb-md rounded-xl bg-error-container p-sm text-label-md text-error">{error}</p> : null}
+      {error ? <p className="mb-4 rounded-xl bg-error-container p-2 text-label-md text-error">{error}</p> : null}
       {promotionMessage ? (
-        <p className="mb-md rounded-xl bg-primary-fixed p-sm text-label-md text-primary">{promotionMessage}</p>
+        <p className="mb-4 rounded-xl bg-primary-fixed p-2 text-label-md text-primary">{promotionMessage}</p>
       ) : null}
 
       {staples.length === 0 ? (
-        <div className="rounded-xl bg-surface-container-lowest p-lg text-center shadow-card">
+        <div className="rounded-xl bg-surface-container-lowest p-6 text-center shadow-card">
           <p className="text-body-md text-on-surface-variant">No staples yet. Add one to start your recurring list.</p>
         </div>
       ) : (
-        <ul className="grid gap-md">
+        <ul className="grid gap-4">
           {staples.map((staple) => (
-            <li key={staple.id} className="rounded-xl bg-surface-container-lowest p-md shadow-card">
-              <div className="flex items-start justify-between gap-md">
+            <li key={staple.id} className="rounded-xl bg-surface-container-lowest p-4 shadow-card">
+              <div className="flex items-start justify-between gap-4">
                 <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-sm">
+                  <div className="flex flex-wrap items-center gap-2">
                     <h3 className="text-body-lg font-semibold">{staple.name}</h3>
                     {staple.quantity ? (
-                      <span className="rounded-full bg-surface-container px-sm py-xs text-label-sm text-on-surface-variant">
+                      <span className="rounded-full bg-surface-container px-2 py-1 text-label-sm text-on-surface-variant">
                         {staple.quantity}
                       </span>
                     ) : null}
                   </div>
                   <span
-                    className={`mt-sm inline-flex rounded-full px-sm py-xs text-label-sm ${
+                    className={`mt-2 inline-flex rounded-full px-2 py-1 text-label-sm ${
                       staple.interval_days <= 14
                         ? "bg-primary-fixed text-primary"
                         : "bg-surface-container-high text-on-surface-variant"
@@ -149,7 +149,7 @@ export function StaplesManager({
                   >
                     every {staple.interval_days} days
                   </span>
-                  <p className="mt-sm text-label-sm text-on-surface-variant">
+                  <p className="mt-2 text-label-sm text-on-surface-variant">
                     Next automatic review: {formatDate(staple.eligible_at)}
                   </p>
                 </div>
@@ -169,16 +169,16 @@ export function StaplesManager({
         </ul>
       )}
 
-      <section className="mt-xl rounded-xl bg-surface-container-low p-md" aria-label="Development tools">
+      <section className="mt-8 rounded-xl bg-surface-container-low p-4" aria-label="Development tools">
         <button
           type="button"
-          className="min-h-12 w-full rounded-full bg-primary-fixed px-md text-label-md text-primary"
+          className="min-h-12 w-full rounded-full bg-primary-fixed px-4 text-label-md text-primary"
           disabled={isPromoting || staples.length === 0}
           onClick={handlePromoteAll}
         >
           {isPromoting ? "Adding staples..." : "Review all staples now"}
         </button>
-        <p className="mt-sm text-label-sm text-on-surface-variant">
+        <p className="mt-2 text-label-sm text-on-surface-variant">
           Adds staples without active shopping-list items to review for local development.
         </p>
       </section>
@@ -196,18 +196,18 @@ export function StaplesManager({
 
       <BottomSheet open={actionStaple !== null} title="Staple actions" onClose={() => setActionStaple(null)}>
         {actionStaple ? (
-          <div className="grid gap-sm">
+          <div className="grid gap-2">
             <p className="text-body-md text-on-surface-variant">{actionStaple.name}</p>
             <button
               type="button"
-              className="min-h-12 rounded-full bg-primary px-md text-label-md text-white"
+              className="min-h-12 rounded-full bg-primary px-4 text-label-md text-white"
               onClick={() => openEditSheet(actionStaple)}
             >
               Edit
             </button>
             <button
               type="button"
-              className="min-h-12 rounded-full bg-transparent px-md text-label-md text-error"
+              className="min-h-12 rounded-full bg-transparent px-4 text-label-md text-error"
               disabled={pendingStapleId === actionStaple.id}
               onClick={() => void handleDelete(actionStaple.id)}
             >
@@ -215,7 +215,7 @@ export function StaplesManager({
             </button>
             <button
               type="button"
-              className="min-h-12 rounded-full bg-surface-container-low px-md text-label-md text-on-surface"
+              className="min-h-12 rounded-full bg-surface-container-low px-4 text-label-md text-on-surface"
               onClick={() => setActionStaple(null)}
             >
               Cancel
@@ -272,8 +272,8 @@ function EditStapleSheet({
 
   return (
     <BottomSheet open={open} title={staple ? "Edit staple" : "Add staple"} onClose={onClose}>
-      <form className="grid gap-md" onSubmit={handleSubmit}>
-        <label className="grid gap-xs text-label-md text-on-surface-variant">
+      <form className="grid gap-4" onSubmit={handleSubmit}>
+        <label className="grid gap-1 text-label-md text-on-surface-variant">
           <span>Name (required)</span>
           <input
             value={draft.name}
@@ -282,7 +282,7 @@ function EditStapleSheet({
             required
           />
         </label>
-        <label className="grid gap-xs text-label-md text-on-surface-variant">
+        <label className="grid gap-1 text-label-md text-on-surface-variant">
           <span>Quantity (optional)</span>
           <input
             value={draft.quantity}
@@ -291,8 +291,8 @@ function EditStapleSheet({
           />
         </label>
         <div>
-          <p className="mb-sm text-label-md text-on-surface-variant">Interval</p>
-          <div className="grid grid-cols-[56px_1fr_56px] items-center gap-sm">
+          <p className="mb-2 text-label-md text-on-surface-variant">Interval</p>
+          <div className="grid grid-cols-[56px_1fr_56px] items-center gap-2">
             <button
               type="button"
               className="grid min-h-14 place-items-center rounded-full bg-surface-container text-on-surface"
@@ -301,7 +301,7 @@ function EditStapleSheet({
             >
               -
             </button>
-            <output className="rounded-full bg-primary-fixed px-md py-md text-center text-label-md text-primary">
+            <output className="rounded-full bg-primary-fixed px-4 py-4 text-center text-label-md text-primary">
               {draft.intervalDays} days
             </output>
             <button
@@ -313,16 +313,16 @@ function EditStapleSheet({
               +
             </button>
           </div>
-          <p className="mt-sm text-label-sm text-on-surface-variant">Staples can recur every day or less often.</p>
+          <p className="mt-2 text-label-sm text-on-surface-variant">Staples can recur every day or less often.</p>
         </div>
-        <button type="submit" className="min-h-14 rounded-full bg-primary px-md text-label-md text-white" disabled={pending}>
+        <button type="submit" className="min-h-14 rounded-full bg-primary px-4 text-label-md text-white" disabled={pending}>
           {pending ? "Saving..." : "Save staple"}
         </button>
       </form>
       {onDelete ? (
         <button
           type="button"
-          className="mt-sm min-h-12 w-full rounded-full bg-transparent px-md text-label-md text-error"
+          className="mt-2 min-h-12 w-full rounded-full bg-transparent px-4 text-label-md text-error"
           disabled={pending}
           onClick={() => void onDelete()}
         >
@@ -331,12 +331,12 @@ function EditStapleSheet({
       ) : null}
       <button
         type="button"
-        className="mt-xs min-h-12 w-full rounded-full bg-transparent px-md text-label-md text-on-surface-variant"
+        className="mt-1 min-h-12 w-full rounded-full bg-transparent px-4 text-label-md text-on-surface-variant"
         onClick={onClose}
       >
         Cancel
       </button>
-      {error ? <p className="mt-md rounded-xl bg-error-container p-sm text-label-md text-error">{error}</p> : null}
+      {error ? <p className="mt-4 rounded-xl bg-error-container p-2 text-label-md text-error">{error}</p> : null}
     </BottomSheet>
   );
 }

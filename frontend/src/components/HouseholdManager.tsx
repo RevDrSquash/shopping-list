@@ -107,26 +107,26 @@ export function HouseholdManager({ currentUser, onMembershipChanged }: Household
     <>
       <TopAppBar title="Household" />
 
-      <section className="grid gap-xl" aria-labelledby="household-management-title">
+      <section className="grid gap-8" aria-labelledby="household-management-title">
         <h2 id="household-management-title" className="sr-only">
           Household management
         </h2>
 
-        {error ? <p className="rounded-xl bg-error-container p-sm text-label-md text-error">{error}</p> : null}
+        {error ? <p className="rounded-xl bg-error-container p-2 text-label-md text-error">{error}</p> : null}
 
         <section aria-labelledby="members-title">
-          <div className="mb-md flex items-center justify-between">
+          <div className="mb-4 flex items-center justify-between">
             <h3 id="members-title" className="text-headline-md">
               Members
             </h3>
-            <span className="rounded-full bg-primary-fixed px-sm py-xs text-label-sm text-primary">
+            <span className="rounded-full bg-primary-fixed px-2 py-1 text-label-sm text-primary">
               {currentUser.household_member_count}
             </span>
           </div>
-          <div className="grid gap-sm">
+          <div className="grid gap-2">
             <MemberCard email={currentUser.email} isCurrentUser />
             {currentUser.household_member_count > 1 ? (
-              <div className="rounded-xl border border-dashed border-outline-variant p-md text-label-md text-on-surface-variant">
+              <div className="rounded-xl border border-dashed border-outline-variant p-4 text-label-md text-on-surface-variant">
                 {currentUser.household_member_count - 1} other{" "}
                 {currentUser.household_member_count - 1 === 1 ? "member" : "members"} in this household
               </div>
@@ -134,20 +134,20 @@ export function HouseholdManager({ currentUser, onMembershipChanged }: Household
           </div>
 
           {!isLoadingInvitations && outgoingInvitations.length > 0 ? (
-            <section className="mt-lg" aria-labelledby="pending-invites-title">
-              <h4 id="pending-invites-title" className="mb-sm text-label-md text-on-surface-variant">
+            <section className="mt-6" aria-labelledby="pending-invites-title">
+              <h4 id="pending-invites-title" className="mb-2 text-label-md text-on-surface-variant">
                 Pending invites
               </h4>
-              <ul className="grid gap-sm" aria-label="Outgoing invitations">
+              <ul className="grid gap-2" aria-label="Outgoing invitations">
                 {outgoingInvitations.map((invitation) => (
                   <li
-                    className="flex items-center justify-between gap-md rounded-xl bg-surface-container-lowest p-md shadow-card"
+                    className="flex items-center justify-between gap-4 rounded-xl bg-surface-container-lowest p-4 shadow-card"
                     key={invitation.id}
                   >
                     <InvitationDetails invitation={invitation} />
                     <button
                       type="button"
-                      className="min-h-10 rounded-full bg-surface-container-low px-md text-label-md text-on-surface"
+                      className="min-h-10 rounded-full bg-surface-container-low px-4 text-label-md text-on-surface"
                       disabled={pendingActionId === invitation.id}
                       onClick={() => void handleCancel(invitation.id)}
                     >
@@ -161,11 +161,11 @@ export function HouseholdManager({ currentUser, onMembershipChanged }: Household
         </section>
 
         <section aria-labelledby="invite-someone-title">
-          <h3 id="invite-someone-title" className="mb-md text-headline-md">
+          <h3 id="invite-someone-title" className="mb-4 text-headline-md">
             Invite by email
           </h3>
-          <form className="rounded-xl bg-surface-container-lowest p-md shadow-card" onSubmit={handleInvite}>
-            <label className="grid gap-xs text-label-md text-on-surface-variant">
+          <form className="rounded-xl bg-surface-container-lowest p-4 shadow-card" onSubmit={handleInvite}>
+            <label className="grid gap-1 text-label-md text-on-surface-variant">
               <span>Email</span>
               <input
                 type="email"
@@ -177,28 +177,28 @@ export function HouseholdManager({ currentUser, onMembershipChanged }: Household
             </label>
             <button
               type="submit"
-              className="mt-md min-h-12 w-full rounded-full bg-primary px-md text-label-md text-white"
+              className="mt-4 min-h-12 w-full rounded-full bg-primary px-4 text-label-md text-white"
               disabled={isInviting}
             >
               {isInviting ? "Sending..." : "Send invite"}
             </button>
-            <p className="mt-sm text-label-sm text-on-surface-variant">
+            <p className="mt-2 text-label-sm text-on-surface-variant">
               They can accept from their pending invitation screen.
             </p>
           </form>
         </section>
 
         <section aria-labelledby="leave-household-title">
-          <h3 id="leave-household-title" className="mb-md text-headline-md">
+          <h3 id="leave-household-title" className="mb-4 text-headline-md">
             Leave household
           </h3>
-          <div className="rounded-xl border border-error p-md">
-            <p className="mb-md text-body-md text-on-surface-variant">
+          <div className="rounded-xl border border-error p-4">
+            <p className="mb-4 text-body-md text-on-surface-variant">
               You will keep copies of the staples and shopping list in a new household.
             </p>
             <button
               type="button"
-              className="min-h-12 w-full rounded-full border border-error bg-transparent px-md text-label-md text-error"
+              className="min-h-12 w-full rounded-full border border-error bg-transparent px-4 text-label-md text-error"
               disabled={isSoleMember || isLeaving}
               title={isSoleMember ? "You are the only member" : undefined}
               onClick={() => void handleLeave()}
@@ -214,15 +214,15 @@ export function HouseholdManager({ currentUser, onMembershipChanged }: Household
 
 function MemberCard({ email, isCurrentUser }: { email: string; isCurrentUser: boolean }) {
   return (
-    <article className="flex items-center gap-md rounded-xl bg-surface-container-lowest p-md shadow-card">
+    <article className="flex items-center gap-4 rounded-xl bg-surface-container-lowest p-4 shadow-card">
       <div className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-secondary-fixed text-label-md text-secondary">
         {initialsFor(email)}
       </div>
       <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-sm">
+        <div className="flex items-center gap-2">
           <h4 className="truncate text-body-md font-semibold">{email.split("@")[0]}</h4>
           {isCurrentUser ? (
-            <span className="rounded-full bg-primary-fixed px-sm py-xs text-label-sm text-primary">You</span>
+            <span className="rounded-full bg-primary-fixed px-2 py-1 text-label-sm text-primary">You</span>
           ) : null}
         </div>
         <p className="truncate text-label-md text-on-surface-variant">{email}</p>

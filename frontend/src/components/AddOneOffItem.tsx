@@ -40,8 +40,8 @@ export function AddOneOffItem({ open, onClose, onAdd }: AddOneOffItemProps) {
 
   return (
     <BottomSheet open={open} title="Add item" onClose={onClose}>
-      <form className="grid gap-md" onSubmit={handleSubmit}>
-        <label className="grid gap-xs text-label-md text-on-surface-variant">
+      <form className="grid gap-4" onSubmit={handleSubmit}>
+        <label className="grid gap-1 text-label-md text-on-surface-variant">
           <span>Name</span>
           <input
             className="min-h-14 rounded-xl border-outline-variant"
@@ -52,7 +52,7 @@ export function AddOneOffItem({ open, onClose, onAdd }: AddOneOffItemProps) {
             required
           />
         </label>
-        <label className="grid gap-xs text-label-md text-on-surface-variant">
+        <label className="grid gap-1 text-label-md text-on-surface-variant">
           <span>Quantity (optional)</span>
           <input
             className="min-h-14 rounded-xl border-outline-variant"
@@ -64,7 +64,7 @@ export function AddOneOffItem({ open, onClose, onAdd }: AddOneOffItemProps) {
         </label>
         <button
           type="submit"
-          className="mt-sm min-h-14 rounded-full bg-primary px-md text-label-md text-white"
+          className="mt-2 min-h-14 rounded-full bg-primary px-4 text-label-md text-white"
           disabled={isSubmitting}
         >
           {isSubmitting ? "Adding..." : "Add to list"}
@@ -78,7 +78,7 @@ export function AddOneOffItem({ open, onClose, onAdd }: AddOneOffItemProps) {
         </button>
       </form>
 
-      {error ? <p className="mt-md rounded-xl bg-error-container p-sm text-label-md text-error">{error}</p> : null}
+      {error ? <p className="mt-4 rounded-xl bg-error-container p-2 text-label-md text-error">{error}</p> : null}
     </BottomSheet>
   );
 }

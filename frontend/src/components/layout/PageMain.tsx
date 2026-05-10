@@ -9,10 +9,10 @@ type PageMainProps = {
 };
 
 const variantClasses: Record<PageMainVariant, string> = {
-  centered: "flex min-h-screen flex-col items-center justify-center px-container-padding",
-  auth: "mx-auto flex min-h-screen w-full max-w-page-narrow flex-col items-center justify-center px-container-padding py-xl",
-  flow: "mx-auto flex min-h-screen w-full max-w-page-narrow flex-col px-container-padding py-lg",
-  app: "mx-auto min-h-screen w-full max-w-page-default px-container-padding pb-[calc(112px+env(safe-area-inset-bottom))]",
+  centered: "flex min-h-screen flex-col items-center justify-center px-5",
+  auth: "mx-auto flex min-h-screen w-full max-w-page-narrow flex-col items-center justify-center px-5 py-8",
+  flow: "mx-auto flex min-h-screen w-full max-w-page-narrow flex-col px-5 py-6",
+  app: "mx-auto min-h-screen w-full max-w-page-default px-5 pb-[calc(112px+env(safe-area-inset-bottom))]",
 };
 
 export function PageMain({ variant, children, className }: PageMainProps) {

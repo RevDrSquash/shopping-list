@@ -89,35 +89,35 @@ export function PendingInviteView() {
 
   return (
     <PageMain variant="flow">
-      <header className="mb-xl text-center">
+      <header className="mb-8 text-center">
         <p className="text-headline-lg">Household</p>
       </header>
 
       <section className="flex flex-1 flex-col text-center" aria-labelledby="invite-title">
-        <div className="mx-auto mb-lg grid h-24 w-24 place-items-center rounded-full bg-primary-fixed text-primary">
+        <div className="mx-auto mb-6 grid h-24 w-24 place-items-center rounded-full bg-primary-fixed text-primary">
           <span className="material-symbols-outlined text-[52px]" aria-hidden="true">
             mail
           </span>
         </div>
         <p className="text-label-md text-on-surface-variant">You have a household invitation</p>
-        <h1 id="invite-title" className="mt-sm text-headline-xl">
+        <h1 id="invite-title" className="mt-2 text-headline-xl">
           You have been invited
         </h1>
-        <p className="mx-auto mt-md max-w-[20rem] text-body-md text-on-surface-variant">
+        <p className="mx-auto mt-4 max-w-xs text-body-md text-on-surface-variant">
           {invitation.user_email} invited you to join {invitation.household_name}.
         </p>
 
-        <div className="mt-xl grid gap-sm rounded-xl bg-surface-container-lowest p-md text-left shadow-card">
+        <div className="mt-8 grid gap-2 rounded-xl bg-surface-container-lowest p-4 text-left shadow-card">
           <InfoRow icon="merge_type" text="Your current staples and list will be merged into the new household." />
           <InfoRow icon="delete_outline" text="Duplicate invitations are cleared after you decide." />
         </div>
 
         {invitations.length > 1 ? (
-          <section className="mt-lg text-left" aria-label="Additional invitations">
-            <h2 className="mb-sm text-label-md text-on-surface-variant">Other invitations</h2>
-            <ul className="grid gap-sm">
+          <section className="mt-6 text-left" aria-label="Additional invitations">
+            <h2 className="mb-2 text-label-md text-on-surface-variant">Other invitations</h2>
+            <ul className="grid gap-2">
               {invitations.slice(1).map((extraInvitation) => (
-                <li key={extraInvitation.id} className="rounded-xl bg-surface-container-low p-md text-label-md">
+                <li key={extraInvitation.id} className="rounded-xl bg-surface-container-low p-4 text-label-md">
                   {extraInvitation.household_name}
                 </li>
               ))}
@@ -125,12 +125,12 @@ export function PendingInviteView() {
           </section>
         ) : null}
 
-        {error ? <p className="mt-md rounded-xl bg-error-container p-sm text-label-md text-error">{error}</p> : null}
+        {error ? <p className="mt-4 rounded-xl bg-error-container p-2 text-label-md text-error">{error}</p> : null}
 
-        <div className="mt-auto grid gap-sm pt-xl">
+        <div className="mt-auto grid gap-2 pt-8">
           <button
             type="button"
-            className="min-h-14 rounded-full bg-primary px-md text-label-md text-white"
+            className="min-h-14 rounded-full bg-primary px-4 text-label-md text-white"
             disabled={pendingAction !== null}
             onClick={() => void handleInvitation(invitation.id, "accept")}
           >
@@ -138,7 +138,7 @@ export function PendingInviteView() {
           </button>
           <button
             type="button"
-            className="min-h-14 rounded-full border border-outline-variant bg-transparent px-md text-label-md text-on-surface"
+            className="min-h-14 rounded-full border border-outline-variant bg-transparent px-4 text-label-md text-on-surface"
             disabled={pendingAction !== null}
             onClick={() => void handleInvitation(invitation.id, "decline")}
           >
@@ -146,7 +146,7 @@ export function PendingInviteView() {
           </button>
           <button
             type="button"
-            className="min-h-12 rounded-full bg-transparent px-md text-label-md text-on-surface-variant"
+            className="min-h-12 rounded-full bg-transparent px-4 text-label-md text-on-surface-variant"
             disabled={pendingAction !== null}
             onClick={() => void handleSignOut()}
           >
@@ -160,7 +160,7 @@ export function PendingInviteView() {
 
 function InfoRow({ icon, text }: { icon: string; text: string }) {
   return (
-    <div className="flex gap-sm">
+    <div className="flex gap-2">
       <span className="material-symbols-outlined text-primary" aria-hidden="true">
         {icon}
       </span>

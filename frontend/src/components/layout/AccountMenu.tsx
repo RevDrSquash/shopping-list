@@ -60,16 +60,16 @@ export function AccountMenu() {
         <div
           role="menu"
           aria-label="Account"
-          className="absolute right-0 top-full z-30 mt-sm w-64 rounded-xl bg-surface-container-lowest p-md shadow-card"
+          className="absolute right-0 top-full z-30 mt-2 w-64 rounded-xl bg-surface-container-lowest p-4 shadow-card"
         >
-          <div className="grid gap-xs">
+          <div className="grid gap-1">
             <p className="truncate text-body-md font-semibold">{displayName}</p>
             <p className="truncate text-label-md text-on-surface-variant">{user.email}</p>
           </div>
           <button
             type="button"
             role="menuitem"
-            className="mt-md flex min-h-10 w-full items-center justify-center gap-sm rounded-full bg-surface-container-low px-md text-label-md text-on-surface"
+            className="mt-4 flex min-h-10 w-full items-center justify-center gap-2 rounded-full bg-surface-container-low px-4 text-label-md text-on-surface"
             onClick={() => {
               setIsOpen(false);
               void signOut();

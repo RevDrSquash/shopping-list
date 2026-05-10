@@ -80,10 +80,10 @@ export function BottomSheet({ open, title, children, onClose }: BottomSheetProps
         role="dialog"
         aria-modal="true"
         aria-labelledby="bottom-sheet-title"
-        className="relative max-h-[92vh] w-[min(100vw,32rem)] min-w-0 overflow-y-auto rounded-t-[2rem] bg-surface-container-lowest px-container-padding pb-[max(24px,env(safe-area-inset-bottom))] pt-sm shadow-card sm:mb-0 sm:rounded-[2rem]"
+        className="relative max-h-[92vh] w-[min(100vw,32rem)] min-w-0 overflow-y-auto rounded-t-[2rem] bg-surface-container-lowest px-5 pb-[max(24px,env(safe-area-inset-bottom))] pt-2 shadow-card sm:mb-0 sm:rounded-[2rem]"
       >
-        <div className="mx-auto mb-md h-1 w-12 rounded-full bg-outline-variant" />
-        <div className="mb-lg flex items-center justify-between gap-md">
+        <div className="mx-auto mb-4 h-1 w-12 rounded-full bg-outline-variant" />
+        <div className="mb-6 flex items-center justify-between gap-4">
           <h2 id="bottom-sheet-title" className="text-headline-lg">
             {title}
           </h2>

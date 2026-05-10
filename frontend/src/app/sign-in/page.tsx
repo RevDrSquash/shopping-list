@@ -43,9 +43,9 @@ export default function SignInPage() {
       {isLoading ? <p className="text-body-md text-on-surface-variant">Loading sign-in options...</p> : null}
       {!isLoading && config ? <SignIn config={config} onLogin={handleLogin} /> : null}
       {!isLoading && !config && !error ? (
-        <p className="rounded-xl bg-error-container p-md text-error">No sign-in options are available.</p>
+        <p className="rounded-xl bg-error-container p-4 text-error">No sign-in options are available.</p>
       ) : null}
-      {error ? <p className="mt-md rounded-xl bg-error-container p-md text-error">{error}</p> : null}
+      {error ? <p className="mt-4 rounded-xl bg-error-container p-4 text-error">{error}</p> : null}
     </PageMain>
   );
 }
