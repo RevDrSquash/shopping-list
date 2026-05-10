@@ -7,6 +7,7 @@ from app.main import create_app
 
 def test_dev_login_is_rejected_outside_development_or_test(monkeypatch) -> None:
     monkeypatch.setenv("ENV", "production")
+    monkeypatch.setenv("APP_BASE_URL", "https://shopping.example")
     get_settings.cache_clear()
     reset_database_caches()
 
@@ -28,6 +29,7 @@ def test_dev_login_is_rejected_when_env_is_unset(monkeypatch) -> None:
             "postgresql+psycopg://test:test@localhost:5432/test",
         )
         env.setenv("SESSION_SECRET", "test-session-secret")
+        env.setenv("APP_BASE_URL", "https://shopping.example")
         get_settings.cache_clear()
         reset_database_caches()
 

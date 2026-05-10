@@ -1,0 +1,7 @@
+[build]
+builder = "NIXPACKS"
+
+[deploy]
+startCommand = "poetry run alembic upgrade head && poetry run python -m app.jobs.promote_staples"
+restartPolicyType = "NEVER"
+cronSchedule = "0 * * * *"

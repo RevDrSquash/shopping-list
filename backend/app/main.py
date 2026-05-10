@@ -10,6 +10,7 @@ from app.services.google_oauth import register_google_oauth
 
 def create_app(settings: Optional[Settings] = None) -> FastAPI:
     app_settings = settings or get_settings()
+    app_settings.validate_production_app_base_url()
     if app_settings.google_oauth_enabled:
         register_google_oauth(app_settings)
 
