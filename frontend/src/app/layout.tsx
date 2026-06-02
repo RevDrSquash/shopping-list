@@ -23,8 +23,10 @@ export default function RootLayout({
       <head>
         {/* Material Symbols is an icon font, so it stays as a stylesheet in the app shell. */}
         {/* eslint-disable-next-line @next/next/no-page-custom-font */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         <link
-          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined&display=optional"
+          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined&display=block"
           rel="stylesheet"
         />
       </head>
