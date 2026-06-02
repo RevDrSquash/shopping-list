@@ -36,6 +36,7 @@ describe("ShoppingList", () => {
         onConfirm={vi.fn()}
         onSkip={vi.fn()}
         onPurchase={vi.fn()}
+        onAddItem={vi.fn()}
       />,
     );
 
@@ -59,6 +60,7 @@ describe("ShoppingList", () => {
         onConfirm={onConfirm}
         onSkip={onSkip}
         onPurchase={onPurchase}
+        onAddItem={vi.fn()}
       />,
     );
 
@@ -82,6 +84,7 @@ describe("ShoppingList", () => {
         onConfirm={vi.fn()}
         onSkip={onSkip}
         onPurchase={vi.fn()}
+        onAddItem={vi.fn()}
       />,
     );
 

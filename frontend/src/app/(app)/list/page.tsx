@@ -4,7 +4,6 @@ import { useState } from "react";
 import { AddOneOffItem } from "@/components/AddOneOffItem";
 import { useAppShell } from "@/components/AppShell";
 import { ShoppingList } from "@/components/ShoppingList";
-import { Fab } from "@/components/layout/Fab";
 import { TopAppBar } from "@/components/layout/TopAppBar";
 
 export default function ListPage() {
@@ -20,8 +19,8 @@ export default function ListPage() {
         onConfirm={confirmListItem}
         onSkip={skipListItem}
         onPurchase={purchaseListItem}
+        onAddItem={() => setIsAddingItem(true)}
       />
-      <Fab label="Add item" onClick={() => setIsAddingItem(true)} />
       <AddOneOffItem open={isAddingItem} onClose={() => setIsAddingItem(false)} onAdd={addItem} />
     </>
   );

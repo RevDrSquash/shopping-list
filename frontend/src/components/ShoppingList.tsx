@@ -10,6 +10,7 @@ type ShoppingListProps = {
   onConfirm: (itemId: string) => Promise<void>;
   onSkip: (itemId: string) => Promise<void>;
   onPurchase: (itemId: string) => Promise<void>;
+  onAddItem: () => void;
 };
 
 export function ShoppingList({
@@ -18,11 +19,27 @@ export function ShoppingList({
   onConfirm,
   onSkip,
   onPurchase,
+  onAddItem,
 }: ShoppingListProps) {
   const [actionItem, setActionItem] = useState<ShoppingListItemType | null>(null);
 
   return (
     <section aria-labelledby="shopping-list-title">
+      <div className="mb-3 flex items-center justify-between">
+        <h2 id="shopping-list-title" className="sr-only">
+          Shopping items
+        </h2>
+        <button
+          type="button"
+          aria-label="Add item"
+          className="ml-auto grid h-9 w-9 min-h-0 shrink-0 place-items-center rounded-full bg-primary p-0 text-white shadow-card transition hover:bg-primary-container"
+          onClick={onAddItem}
+        >
+          <span className="material-symbols-outlined text-[20px]" aria-hidden="true">
+            add
+          </span>
+        </button>
+      </div>
       {items.length === 0 ? (
         <div className="rounded-xl bg-surface-container-lowest p-6 text-center shadow-card">
           <p className="text-body-md text-on-surface-variant">Your list is clear. Add an item when something comes up.</p>
