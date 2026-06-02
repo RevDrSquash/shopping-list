@@ -11,4 +11,4 @@ The official Nginx image renders `default.conf.template` at container startup wi
 
 Requests under `/api/` are forwarded to the backend with the `/api` prefix stripped. All other requests are forwarded to the frontend. Proxy buffering and caching are disabled, HTTP/1.1 is used, upgrade headers are preserved for dev WebSockets, and the read timeout is extended so Server-Sent Events can stay open.
 
-Local Compose uses a `host.docker.internal.ipv4` host-gateway alias for upstreams so the host mapping is explicit in `docker-compose.yml`.
+Local Compose points `BACKEND_HOST` and `FRONTEND_HOST` at `host.docker.internal`, which Docker Desktop publishes through its embedded DNS at `127.0.0.11` so the runtime `resolver` directive can look it up at request time.

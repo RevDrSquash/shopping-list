@@ -24,12 +24,11 @@ services:
       - "8080:80"
     environment:
       PORT: 80
-      BACKEND_HOST: host.docker.internal.ipv4:8000
-      FRONTEND_HOST: host.docker.internal.ipv4:3000
+      BACKEND_HOST: host.docker.internal:8000
+      FRONTEND_HOST: host.docker.internal:3000
+      NGINX_ENTRYPOINT_LOCAL_RESOLVERS: 1
     volumes:
       - ./nginx:/etc/nginx/templates:ro
-    extra_hosts:
-      - "host.docker.internal.ipv4:host-gateway"
 
 volumes:
   postgres_data:
