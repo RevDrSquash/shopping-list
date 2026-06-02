@@ -8,13 +8,12 @@ import { Fab } from "@/components/layout/Fab";
 import { TopAppBar } from "@/components/layout/TopAppBar";
 
 export default function ListPage() {
-  const { items, pendingItemId, addItem, confirmListItem, skipListItem, purchaseListItem, householdEvents } =
-    useAppShell();
+  const { items, pendingItemId, addItem, confirmListItem, skipListItem, purchaseListItem } = useAppShell();
   const [isAddingItem, setIsAddingItem] = useState(false);
 
   return (
     <>
-      <TopAppBar title="Shopping list" subtitle={`Real-time: ${householdEvents.status}`} />
+      <TopAppBar title="Shopping list" />
       <ShoppingList
         items={items}
         pendingItemId={pendingItemId}

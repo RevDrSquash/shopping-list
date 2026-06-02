@@ -9,7 +9,7 @@ import {
   type ReactNode,
 } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { useHouseholdEvents, type HouseholdEventsState } from "@/hooks/useHouseholdEvents";
+import { useHouseholdEvents } from "@/hooks/useHouseholdEvents";
 import {
   addOneOffItem,
   confirmItem,
@@ -43,7 +43,6 @@ type AppShellContextValue = {
   pendingItemId: string | null;
   pendingStapleId: string | null;
   isPromoting: boolean;
-  householdEvents: HouseholdEventsState;
   refresh: () => Promise<void>;
   signOut: () => Promise<void>;
   addItem: (payload: { name: string; quantity: string }) => Promise<void>;
@@ -124,7 +123,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     }
   }, [loadHouseholdData]);
 
-  const householdEvents = useHouseholdEvents({
+  useHouseholdEvents({
     enabled: user !== null,
     householdId: user?.household_id ?? null,
     onHouseholdChanged: () => {
@@ -195,7 +194,6 @@ export function AppShell({ children }: { children: ReactNode }) {
         pendingItemId,
         pendingStapleId,
         isPromoting,
-        householdEvents,
         refresh,
         signOut,
         addItem: (payload) => refreshAfterMutation(() => addOneOffItem(payload)),

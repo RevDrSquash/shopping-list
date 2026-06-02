@@ -41,12 +41,8 @@ function TestSubscriber({
   householdId?: string | null;
   onHouseholdChanged: () => void;
 }) {
-  const events = useHouseholdEvents({ enabled, householdId, onHouseholdChanged });
-  return (
-    <p>
-      {events.status}:{events.receivedCount}
-    </p>
-  );
+  useHouseholdEvents({ enabled, householdId, onHouseholdChanged });
+  return null;
 }
 
 describe("useHouseholdEvents", () => {
@@ -60,26 +56,11 @@ describe("useHouseholdEvents", () => {
   });
 
   it("opens a credentialed EventSource when enabled", () => {
-    const { getByText } = render(<TestSubscriber enabled onHouseholdChanged={vi.fn()} />);
+    render(<TestSubscriber enabled onHouseholdChanged={vi.fn()} />);
 
     expect(MockEventSource.instances).toHaveLength(1);
     expect(MockEventSource.instances[0]?.url).toBe("/api/events");
     expect(MockEventSource.instances[0]?.withCredentials).toBe(true);
-    expect(getByText("connecting:0")).toBeInTheDocument();
-  });
-
-  it("reports the connection status", () => {
-    const { getByText } = render(<TestSubscriber enabled onHouseholdChanged={vi.fn()} />);
-
-    act(() => {
-      MockEventSource.instances[0]?.emit("open");
-    });
-    expect(getByText("open:0")).toBeInTheDocument();
-
-    act(() => {
-      MockEventSource.instances[0]?.emit("error");
-    });
-    expect(getByText("error:0")).toBeInTheDocument();
   });
 
   it("does not subscribe while signed out", () => {
@@ -107,26 +88,24 @@ describe("useHouseholdEvents", () => {
 
   it("refreshes when a household event arrives", () => {
     const onHouseholdChanged = vi.fn();
-    const { getByText } = render(<TestSubscriber enabled onHouseholdChanged={onHouseholdChanged} />);
+    render(<TestSubscriber enabled onHouseholdChanged={onHouseholdChanged} />);
 
     act(() => {
       MockEventSource.instances[0]?.emit("household_changed");
     });
 
     expect(onHouseholdChanged).toHaveBeenCalledTimes(1);
-    expect(getByText("connecting:1")).toBeInTheDocument();
   });
 
   it("refreshes when a default message carries a household event payload", () => {
     const onHouseholdChanged = vi.fn();
-    const { getByText } = render(<TestSubscriber enabled onHouseholdChanged={onHouseholdChanged} />);
+    render(<TestSubscriber enabled onHouseholdChanged={onHouseholdChanged} />);
 
     act(() => {
       MockEventSource.instances[0]?.emit("message", "household_changed");
     });
 
     expect(onHouseholdChanged).toHaveBeenCalledTimes(1);
-    expect(getByText("connecting:1")).toBeInTheDocument();
   });
 
   it("does not reconnect when only the callback identity changes", () => {

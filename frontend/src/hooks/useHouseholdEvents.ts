@@ -1,14 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { getHouseholdEventsUrl } from "@/lib/api";
-
-export type HouseholdEventsStatus = "idle" | "connecting" | "open" | "error";
-
-export type HouseholdEventsState = {
-  status: HouseholdEventsStatus;
-  receivedCount: number;
-};
 
 type UseHouseholdEventsOptions = {
   enabled: boolean;
@@ -16,14 +9,7 @@ type UseHouseholdEventsOptions = {
   onHouseholdChanged: () => void;
 };
 
-export function useHouseholdEvents({
-  enabled,
-  householdId,
-  onHouseholdChanged,
-}: UseHouseholdEventsOptions): HouseholdEventsState {
-  const [status, setStatus] = useState<HouseholdEventsStatus>("idle");
-  const [receivedCount, setReceivedCount] = useState(0);
-
+export function useHouseholdEvents({ enabled, householdId, onHouseholdChanged }: UseHouseholdEventsOptions): void {
   // Keep the latest callback in a ref so changes to its identity don't
   // tear down and re-open the EventSource on every parent re-render.
   const onHouseholdChangedRef = useRef(onHouseholdChanged);
@@ -33,15 +19,10 @@ export function useHouseholdEvents({
 
   useEffect(() => {
     if (!enabled) {
-      setStatus("idle");
-      setReceivedCount(0);
       return;
     }
 
-    setStatus("connecting");
     const events = new EventSource(getHouseholdEventsUrl(), { withCredentials: true });
-    const handleOpen = () => setStatus("open");
-    const handleError = () => setStatus("error");
     const handleHouseholdChanged = (event: Event) => {
       if (event instanceof MessageEvent) {
         try {
@@ -54,23 +35,16 @@ export function useHouseholdEvents({
         }
       }
 
-      setReceivedCount((count) => count + 1);
       onHouseholdChangedRef.current();
     };
 
-    events.addEventListener("open", handleOpen);
-    events.addEventListener("error", handleError);
     events.addEventListener("message", handleHouseholdChanged);
     events.addEventListener("household_changed", handleHouseholdChanged);
 
     return () => {
-      events.removeEventListener("open", handleOpen);
-      events.removeEventListener("error", handleError);
       events.removeEventListener("message", handleHouseholdChanged);
       events.removeEventListener("household_changed", handleHouseholdChanged);
       events.close();
     };
   }, [enabled, householdId]);
-
-  return { status, receivedCount };
 }
