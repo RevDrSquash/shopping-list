@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 from typing import Optional
 from uuid import UUID
 
-from sqlalchemy import exists, select
+from sqlalchemy import delete, exists, select
 from sqlalchemy.orm import Session
 
 from app.db.models import ShoppingListItem, ShoppingListItemStatus, Staple
@@ -11,16 +11,27 @@ from app.db.models import ShoppingListItem, ShoppingListItemStatus, Staple
 ACTIVE_PROMOTION_STATUSES = (
     ShoppingListItemStatus.needs_review,
     ShoppingListItemStatus.confirmed,
+    ShoppingListItemStatus.in_cart,
 )
 
 
 def promote_due_staples(db: Session, now: Optional[datetime] = None) -> int:
     promotion_time = now or datetime.now(timezone.utc)
+    purge_purchased(db)
     return _promote_staples(db, promotion_time=promotion_time)
 
 
 def promote_all_inactive_staples(db: Session, household_id: UUID) -> int:
+    purge_purchased(db)
     return _promote_staples(db, household_id=household_id)
+
+
+def purge_purchased(db: Session) -> int:
+    result = db.execute(
+        delete(ShoppingListItem).where(ShoppingListItem.status == ShoppingListItemStatus.purchased)
+    )
+    db.flush()
+    return result.rowcount or 0
 
 
 def _promote_staples(

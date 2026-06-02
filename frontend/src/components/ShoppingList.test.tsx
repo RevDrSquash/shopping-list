@@ -33,9 +33,11 @@ describe("ShoppingList", () => {
       <ShoppingList
         items={items}
         pendingItemId={null}
+        isCompletingShopping={false}
         onConfirm={vi.fn()}
         onSkip={vi.fn()}
-        onPurchase={vi.fn()}
+        onToggleInCart={vi.fn()}
+        onCompleteShopping={vi.fn()}
         onAddItem={vi.fn()}
       />,
     );
@@ -47,31 +49,58 @@ describe("ShoppingList", () => {
     expect(within(list).getByText("Milk").closest("div")).toHaveClass("border-dashed");
   });
 
-  it("calls confirm from a needs-review row and purchase from the checkbox", async () => {
+  it("calls confirm from a needs-review row and toggles in-cart from the checkbox", async () => {
     const user = userEvent.setup();
     const onConfirm = vi.fn().mockResolvedValue(undefined);
     const onSkip = vi.fn().mockResolvedValue(undefined);
-    const onPurchase = vi.fn().mockResolvedValue(undefined);
+    const onToggleInCart = vi.fn().mockResolvedValue(undefined);
 
     render(
       <ShoppingList
         items={items}
         pendingItemId={null}
+        isCompletingShopping={false}
         onConfirm={onConfirm}
         onSkip={onSkip}
-        onPurchase={onPurchase}
+        onToggleInCart={onToggleInCart}
+        onCompleteShopping={vi.fn()}
         onAddItem={vi.fn()}
       />,
     );
 
     await user.click(screen.getAllByRole("button", { name: /milk/i })[0]);
-    await user.click(screen.getByRole("button", { name: /mark bananas purchased/i }));
+    await user.click(screen.getByRole("button", { name: /mark bananas in cart/i }));
 
     await waitFor(() => {
       expect(onConfirm).toHaveBeenCalledWith("review-item");
-      expect(onPurchase).toHaveBeenCalledWith("confirmed-item");
+      expect(onToggleInCart).toHaveBeenCalledWith("confirmed-item");
     });
     expect(onSkip).not.toHaveBeenCalled();
+  });
+
+  it("shows a complete shopping button when items are in cart", async () => {
+    const user = userEvent.setup();
+    const onCompleteShopping = vi.fn().mockResolvedValue(undefined);
+
+    render(
+      <ShoppingList
+        items={[{ ...items[1], status: "in_cart" }]}
+        pendingItemId={null}
+        isCompletingShopping={false}
+        onConfirm={vi.fn()}
+        onSkip={vi.fn()}
+        onToggleInCart={vi.fn()}
+        onCompleteShopping={onCompleteShopping}
+        onAddItem={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByText("Bananas")).toHaveClass("line-through");
+    await user.click(screen.getByRole("button", { name: /complete shopping/i }));
+
+    await waitFor(() => {
+      expect(onCompleteShopping).toHaveBeenCalledOnce();
+    });
   });
 
   it("calls remove when a row is swiped left", async () => {
@@ -81,9 +110,11 @@ describe("ShoppingList", () => {
       <ShoppingList
         items={items}
         pendingItemId={null}
+        isCompletingShopping={false}
         onConfirm={vi.fn()}
         onSkip={onSkip}
-        onPurchase={vi.fn()}
+        onToggleInCart={vi.fn()}
+        onCompleteShopping={vi.fn()}
         onAddItem={vi.fn()}
       />,
     );

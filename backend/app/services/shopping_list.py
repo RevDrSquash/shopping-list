@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 from typing import Optional
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import case, select
 from sqlalchemy.orm import Session
 
 from app.db.models import ShoppingListItem, ShoppingListItemStatus
@@ -11,6 +11,7 @@ from app.db.models import ShoppingListItem, ShoppingListItemStatus
 ACTIVE_ITEM_STATUSES = (
     ShoppingListItemStatus.needs_review,
     ShoppingListItemStatus.confirmed,
+    ShoppingListItemStatus.in_cart,
 )
 
 
@@ -22,7 +23,11 @@ def list_active_items(db: Session, household_id: UUID) -> list[ShoppingListItem]
                 ShoppingListItem.household_id == household_id,
                 ShoppingListItem.status.in_(ACTIVE_ITEM_STATUSES),
             )
-            .order_by(ShoppingListItem.created_at, ShoppingListItem.name)
+            .order_by(
+                case((ShoppingListItem.status == ShoppingListItemStatus.in_cart, 1), else_=0),
+                ShoppingListItem.created_at,
+                ShoppingListItem.name,
+            )
         )
     )
 
@@ -71,6 +76,60 @@ def confirm_item(
     item.status = ShoppingListItemStatus.confirmed
     db.flush()
     return item
+
+
+def set_in_cart(
+    db: Session,
+    household_id: UUID,
+    item_id: UUID,
+) -> Optional[ShoppingListItem]:
+    item = get_active_item(db, household_id, item_id)
+    if item is None:
+        return None
+    if item.status not in (ShoppingListItemStatus.needs_review, ShoppingListItemStatus.confirmed):
+        return None
+
+    item.status = ShoppingListItemStatus.in_cart
+    db.flush()
+    return item
+
+
+def remove_from_cart(
+    db: Session,
+    household_id: UUID,
+    item_id: UUID,
+) -> Optional[ShoppingListItem]:
+    item = get_active_item(db, household_id, item_id)
+    if item is None or item.status != ShoppingListItemStatus.in_cart:
+        return None
+
+    item.status = ShoppingListItemStatus.confirmed
+    db.flush()
+    return item
+
+
+def complete_shopping(
+    db: Session,
+    household_id: UUID,
+    now: Optional[datetime] = None,
+) -> int:
+    completion_time = now or datetime.now(timezone.utc)
+    items = list(
+        db.scalars(
+            select(ShoppingListItem).where(
+                ShoppingListItem.household_id == household_id,
+                ShoppingListItem.status == ShoppingListItemStatus.in_cart,
+            )
+        )
+    )
+
+    for item in items:
+        if item.staple is not None:
+            item.staple.last_resolved_at = completion_time
+        item.status = ShoppingListItemStatus.purchased
+
+    db.flush()
+    return len(items)
 
 
 def resolve_item(

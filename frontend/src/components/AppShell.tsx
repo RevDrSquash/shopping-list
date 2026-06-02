@@ -13,6 +13,7 @@ import { useHouseholdEvents } from "@/hooks/useHouseholdEvents";
 import {
   addOneOffItem,
   confirmItem,
+  completeShopping as completeShoppingRequest,
   createStaple,
   deleteStaple,
   getCurrentUser,
@@ -21,9 +22,11 @@ import {
   listIncomingInvitations,
   logout,
   promoteAllStaples,
-  purchaseItem,
+  removeItemFromCart,
+  setItemInCart,
   skipItem,
   updateStaple,
+  type CompleteShoppingResult,
   type CurrentUser,
   type Invitation,
   type PromotionResult,
@@ -43,12 +46,14 @@ type AppShellContextValue = {
   pendingItemId: string | null;
   pendingStapleId: string | null;
   isPromoting: boolean;
+  isCompletingShopping: boolean;
   refresh: () => Promise<void>;
   signOut: () => Promise<void>;
   addItem: (payload: { name: string; quantity: string }) => Promise<void>;
   confirmListItem: (itemId: string) => Promise<void>;
   skipListItem: (itemId: string) => Promise<void>;
-  purchaseListItem: (itemId: string) => Promise<void>;
+  toggleItemInCart: (itemId: string) => Promise<void>;
+  completeShopping: () => Promise<CompleteShoppingResult | null>;
   createHouseholdStaple: (payload: StaplePayload) => Promise<void>;
   updateHouseholdStaple: (stapleId: string, payload: StaplePayload) => Promise<void>;
   deleteHouseholdStaple: (stapleId: string) => Promise<void>;
@@ -67,6 +72,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [incomingInvitations, setIncomingInvitations] = useState<Invitation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isPromoting, setIsPromoting] = useState(false);
+  const [isCompletingShopping, setIsCompletingShopping] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pendingItemId, setPendingItemId] = useState<string | null>(null);
   const [pendingStapleId, setPendingStapleId] = useState<string | null>(null);
@@ -184,6 +190,30 @@ export function AppShell({ children }: { children: ReactNode }) {
     }
   }
 
+  async function completeShopping() {
+    setIsCompletingShopping(true);
+    try {
+      const result = await completeShoppingRequest();
+      await loadHouseholdData();
+      return result;
+    } catch (completeError) {
+      setError(completeError instanceof Error ? completeError.message : "Unable to complete shopping");
+      return null;
+    } finally {
+      setIsCompletingShopping(false);
+    }
+  }
+
+  async function toggleItemInCart(itemId: string) {
+    await withPendingItem(itemId, async (id) => {
+      const item = items.find((candidate) => candidate.id === id);
+      if (item?.status === "in_cart") {
+        return removeItemFromCart(id);
+      }
+      return setItemInCart(id);
+    });
+  }
+
   const value: AppShellContextValue | null = user
     ? {
         user,
@@ -194,12 +224,14 @@ export function AppShell({ children }: { children: ReactNode }) {
         pendingItemId,
         pendingStapleId,
         isPromoting,
+        isCompletingShopping,
         refresh,
         signOut,
         addItem: (payload) => refreshAfterMutation(() => addOneOffItem(payload)),
         confirmListItem: (itemId) => withPendingItem(itemId, confirmItem),
         skipListItem: (itemId) => withPendingItem(itemId, skipItem),
-        purchaseListItem: (itemId) => withPendingItem(itemId, purchaseItem),
+        toggleItemInCart,
+        completeShopping,
         createHouseholdStaple: (payload) => refreshAfterMutation(() => createStaple(payload)),
         updateHouseholdStaple: (stapleId, payload) => withPendingStaple(stapleId, (id) => updateStaple(id, payload)),
         deleteHouseholdStaple: (stapleId) => withPendingStaple(stapleId, deleteStaple),

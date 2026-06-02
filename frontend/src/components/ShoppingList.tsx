@@ -7,28 +7,43 @@ import type { ShoppingListItem as ShoppingListItemType } from "@/lib/api";
 type ShoppingListProps = {
   items: ShoppingListItemType[];
   pendingItemId: string | null;
+  isCompletingShopping: boolean;
   onConfirm: (itemId: string) => Promise<void>;
   onSkip: (itemId: string) => Promise<void>;
-  onPurchase: (itemId: string) => Promise<void>;
+  onToggleInCart: (itemId: string) => Promise<void>;
+  onCompleteShopping: () => Promise<unknown>;
   onAddItem: () => void;
 };
 
 export function ShoppingList({
   items,
   pendingItemId,
+  isCompletingShopping,
   onConfirm,
   onSkip,
-  onPurchase,
+  onToggleInCart,
+  onCompleteShopping,
   onAddItem,
 }: ShoppingListProps) {
   const [actionItem, setActionItem] = useState<ShoppingListItemType | null>(null);
+  const hasInCartItems = items.some((item) => item.status === "in_cart");
 
   return (
     <section aria-labelledby="shopping-list-title">
-      <div className="mb-3 flex items-center justify-between">
+      <div className="mb-3 flex items-center justify-between gap-3">
         <h2 id="shopping-list-title" className="sr-only">
           Shopping items
         </h2>
+        {hasInCartItems ? (
+          <button
+            type="button"
+            className="min-h-10 rounded-full bg-primary px-4 text-label-md text-white shadow-card hover:bg-primary-container disabled:opacity-60"
+            disabled={isCompletingShopping}
+            onClick={() => void onCompleteShopping()}
+          >
+            Complete shopping
+          </button>
+        ) : null}
         <button
           type="button"
           aria-label="Add item"
@@ -52,7 +67,7 @@ export function ShoppingList({
               item={item}
               disabled={pendingItemId === item.id}
               onConfirm={onConfirm}
-              onPurchase={onPurchase}
+              onToggleInCart={onToggleInCart}
               onRemove={async (itemId) => {
                 await onSkip(itemId);
                 setActionItem(null);
@@ -93,23 +108,26 @@ function ShoppingListRow({
   item,
   disabled,
   onConfirm,
-  onPurchase,
+  onToggleInCart,
   onRemove,
   onOpenActions,
 }: {
   item: ShoppingListItemType;
   disabled: boolean;
   onConfirm: (itemId: string) => Promise<void>;
-  onPurchase: (itemId: string) => Promise<void>;
+  onToggleInCart: (itemId: string) => Promise<void>;
   onRemove: (itemId: string) => Promise<void>;
   onOpenActions: () => void;
 }) {
   const startX = useRef<number | null>(null);
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isReview = item.status === "needs_review";
+  const isInCart = item.status === "in_cart";
   const rowClassName = isReview
     ? "border-2 border-dashed border-outline-variant bg-surface"
-    : "bg-surface-container-lowest shadow-card";
+    : isInCart
+      ? "bg-surface-container text-on-surface-variant"
+      : "bg-surface-container-lowest shadow-card";
 
   function clearLongPress() {
     if (longPressTimer.current) {
@@ -166,7 +184,11 @@ function ShoppingListRow({
           }}
         >
           <span className="flex flex-wrap items-center gap-2">
-            <span className={`text-body-md font-semibold ${isReview ? "text-on-surface-variant" : "text-on-surface"}`}>
+            <span
+              className={`text-body-md font-semibold ${
+                isReview || isInCart ? "text-on-surface-variant" : "text-on-surface"
+              } ${isInCart ? "line-through" : ""}`}
+            >
               {item.name}
             </span>
             {item.quantity ? (
@@ -178,12 +200,19 @@ function ShoppingListRow({
         </button>
         <button
           type="button"
-          className="grid h-6 min-h-0 w-6 shrink-0 place-items-center rounded-full border-2 border-primary bg-transparent p-0 text-primary hover:bg-primary-fixed"
-          aria-label={`Mark ${item.name} purchased`}
+          className={`grid h-6 min-h-0 w-6 shrink-0 place-items-center rounded-full border-2 border-primary p-0 hover:bg-primary-fixed ${
+            isInCart ? "bg-primary text-white" : "bg-transparent text-primary"
+          }`}
+          aria-label={isInCart ? `Move ${item.name} back to shopping list` : `Mark ${item.name} in cart`}
           disabled={disabled}
-          onClick={() => void onPurchase(item.id)}
+          onClick={() => void onToggleInCart(item.id)}
         >
-          <span className="sr-only">Purchased</span>
+          {isInCart ? (
+            <span className="material-symbols-outlined text-[16px]" aria-hidden="true">
+              check
+            </span>
+          ) : null}
+          <span className="sr-only">{isInCart ? "In cart" : "Add to cart"}</span>
         </button>
       </div>
     </li>

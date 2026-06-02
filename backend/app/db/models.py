@@ -23,6 +23,7 @@ class MembershipStatus(str, Enum):
 class ShoppingListItemStatus(str, Enum):
     needs_review = "needs_review"
     confirmed = "confirmed"
+    in_cart = "in_cart"
     purchased = "purchased"
 
 

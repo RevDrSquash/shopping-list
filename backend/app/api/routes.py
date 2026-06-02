@@ -29,7 +29,15 @@ from app.services.households import (
     list_pending_invitations_for_user,
 )
 from app.services.promotion import promote_all_inactive_staples
-from app.services.shopping_list import add_one_off_item, confirm_item, list_active_items, resolve_item
+from app.services.shopping_list import (
+    add_one_off_item,
+    complete_shopping,
+    confirm_item,
+    list_active_items,
+    remove_from_cart,
+    resolve_item,
+    set_in_cart,
+)
 from app.services.staples import create_staple, get_staple, list_staples
 
 router = APIRouter()
@@ -93,6 +101,10 @@ class StapleResponse(BaseModel):
 
 class PromotionResponse(BaseModel):
     promoted_count: int
+
+
+class CompleteShoppingResponse(BaseModel):
+    completed_count: int
 
 
 class ShoppingListItemCreate(BaseModel):
@@ -463,18 +475,47 @@ def post_skip_shopping_list_item(
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
-@router.post("/shopping-list/items/{item_id}/purchase", status_code=status.HTTP_204_NO_CONTENT)
-def post_purchase_shopping_list_item(
+@router.post("/shopping-list/items/{item_id}/cart", response_model=ShoppingListItemResponse)
+def post_cart_shopping_list_item(
     item_id: UUID,
     household: Household = Depends(get_current_household),
     db: Session = Depends(get_db),
-) -> Response:
-    if not resolve_item(db, household.id, item_id):
+) -> ShoppingListItem:
+    item = set_in_cart(db, household.id, item_id)
+    if item is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Shopping list item not found")
 
     db.commit()
     household_events.broadcast_household_changed(household.id)
-    return Response(status_code=status.HTTP_204_NO_CONTENT)
+    db.refresh(item)
+    return item
+
+
+@router.post("/shopping-list/items/{item_id}/uncart", response_model=ShoppingListItemResponse)
+def post_uncart_shopping_list_item(
+    item_id: UUID,
+    household: Household = Depends(get_current_household),
+    db: Session = Depends(get_db),
+) -> ShoppingListItem:
+    item = remove_from_cart(db, household.id, item_id)
+    if item is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Shopping list item not found")
+
+    db.commit()
+    household_events.broadcast_household_changed(household.id)
+    db.refresh(item)
+    return item
+
+
+@router.post("/shopping-list/complete", response_model=CompleteShoppingResponse)
+def post_complete_shopping(
+    household: Household = Depends(get_current_household),
+    db: Session = Depends(get_db),
+) -> CompleteShoppingResponse:
+    completed_count = complete_shopping(db, household.id)
+    db.commit()
+    household_events.broadcast_household_changed(household.id)
+    return CompleteShoppingResponse(completed_count=completed_count)
 
 
 @router.post("/staples", response_model=StapleResponse, status_code=status.HTTP_201_CREATED)

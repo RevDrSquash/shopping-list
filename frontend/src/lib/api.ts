@@ -5,7 +5,7 @@ export type CurrentUser = {
   household_member_count: number;
 };
 
-export type ShoppingListItemStatus = "needs_review" | "confirmed";
+export type ShoppingListItemStatus = "needs_review" | "confirmed" | "in_cart";
 
 export type ShoppingListItem = {
   id: string;
@@ -38,6 +38,10 @@ export type StaplePayload = {
 
 export type PromotionResult = {
   promoted_count: number;
+};
+
+export type CompleteShoppingResult = {
+  completed_count: number;
 };
 
 export type Invitation = {
@@ -230,8 +234,20 @@ export function skipItem(itemId: string): Promise<void> {
   });
 }
 
-export function purchaseItem(itemId: string): Promise<void> {
-  return request<void>(`/shopping-list/items/${itemId}/purchase`, {
+export function setItemInCart(itemId: string): Promise<ShoppingListItem> {
+  return request<ShoppingListItem>(`/shopping-list/items/${itemId}/cart`, {
+    method: "POST",
+  });
+}
+
+export function removeItemFromCart(itemId: string): Promise<ShoppingListItem> {
+  return request<ShoppingListItem>(`/shopping-list/items/${itemId}/uncart`, {
+    method: "POST",
+  });
+}
+
+export function completeShopping(): Promise<CompleteShoppingResult> {
+  return request<CompleteShoppingResult>("/shopping-list/complete", {
     method: "POST",
   });
 }

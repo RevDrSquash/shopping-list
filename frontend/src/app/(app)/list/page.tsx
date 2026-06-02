@@ -7,7 +7,16 @@ import { ShoppingList } from "@/components/ShoppingList";
 import { TopAppBar } from "@/components/layout/TopAppBar";
 
 export default function ListPage() {
-  const { items, pendingItemId, addItem, confirmListItem, skipListItem, purchaseListItem } = useAppShell();
+  const {
+    items,
+    pendingItemId,
+    isCompletingShopping,
+    addItem,
+    confirmListItem,
+    skipListItem,
+    toggleItemInCart,
+    completeShopping,
+  } = useAppShell();
   const [isAddingItem, setIsAddingItem] = useState(false);
 
   return (
@@ -16,9 +25,11 @@ export default function ListPage() {
       <ShoppingList
         items={items}
         pendingItemId={pendingItemId}
+        isCompletingShopping={isCompletingShopping}
         onConfirm={confirmListItem}
         onSkip={skipListItem}
-        onPurchase={purchaseListItem}
+        onToggleInCart={toggleItemInCart}
+        onCompleteShopping={completeShopping}
         onAddItem={() => setIsAddingItem(true)}
       />
       <AddOneOffItem open={isAddingItem} onClose={() => setIsAddingItem(false)} onAdd={addItem} />
