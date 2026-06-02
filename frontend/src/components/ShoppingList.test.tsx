@@ -43,7 +43,7 @@ describe("ShoppingList", () => {
 
     expect(within(list).getByText("Milk")).toBeInTheDocument();
     expect(within(list).getByText("Bananas")).toBeInTheDocument();
-    expect(screen.getByText(/tap to confirm/i)).toBeInTheDocument();
+    expect(within(list).getByText("Milk").closest("div")).toHaveClass("border-dashed");
   });
 
   it("calls confirm from a needs-review row and purchase from the checkbox", async () => {

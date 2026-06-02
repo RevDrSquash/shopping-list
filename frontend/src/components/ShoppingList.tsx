@@ -38,7 +38,7 @@ export function ShoppingList({
           <p className="text-body-md text-on-surface-variant">Your list is clear. Add an item when something comes up.</p>
         </div>
       ) : (
-        <ul className="grid gap-4" aria-label="Shopping items">
+        <ul className="grid gap-2" aria-label="Shopping items">
           {items.map((item) => (
             <ShoppingListRow
               key={item.id}
@@ -147,7 +147,7 @@ function ShoppingListRow({
       <div className="absolute inset-y-0 right-0 flex w-28 items-center justify-center bg-error text-label-md text-white">
         Remove
       </div>
-      <div className={`relative flex items-center gap-4 rounded-xl p-4 ${rowClassName}`}>
+      <div className={`relative flex items-center gap-4 rounded-xl p-3 ${rowClassName}`}>
         <button
           type="button"
           className="min-h-0 flex-1 bg-transparent p-0 text-left text-on-surface hover:bg-transparent"
@@ -159,7 +159,7 @@ function ShoppingListRow({
           }}
         >
           <span className="flex flex-wrap items-center gap-2">
-            <span className={`text-body-lg font-semibold ${isReview ? "text-on-surface-variant" : "text-on-surface"}`}>
+            <span className={`text-body-md font-semibold ${isReview ? "text-on-surface-variant" : "text-on-surface"}`}>
               {item.name}
             </span>
             {item.quantity ? (
@@ -167,10 +167,6 @@ function ShoppingListRow({
                 {item.quantity}
               </span>
             ) : null}
-          </span>
-          <span className="mt-1 block text-label-sm text-on-surface-variant">
-            {item.staple_id ? "Staple" : "One-off"}
-            {isReview ? " · tap to confirm" : ""}
           </span>
         </button>
         <button
