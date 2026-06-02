@@ -23,16 +23,6 @@ export function ShoppingList({
 
   return (
     <section aria-labelledby="shopping-list-title">
-      <div className="mb-4 flex items-end justify-between gap-4">
-        <div>
-          <p className="text-label-sm uppercase tracking-[0.12em] text-primary">Today</p>
-          <h2 id="shopping-list-title" className="text-headline-md">
-            Shopping list
-          </h2>
-        </div>
-        <span className="rounded-full bg-primary-fixed px-2 py-1 text-label-sm text-primary">{items.length}</span>
-      </div>
-
       {items.length === 0 ? (
         <div className="rounded-xl bg-surface-container-lowest p-6 text-center shadow-card">
           <p className="text-body-md text-on-surface-variant">Your list is clear. Add an item when something comes up.</p>
